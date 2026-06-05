@@ -67,9 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPlayActive = document.getElementById('btn-play-active');
     
     const btnResetSort = document.getElementById('btn-reset-sort');
-    
-    const matrixOverlay = document.getElementById('matrix-overlay');
-    const btnRevealMatrix = document.getElementById('btn-reveal-matrix');
 
     // ─── Initialization ──────────────────────────────────────────────
     function populateRoots(selectElem) {
@@ -200,10 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.synth && voicingMidi.length > 0) {
             window.synth.playChord(voicingMidi);
         }
-    });
-
-    btnRevealMatrix.addEventListener('click', () => {
-        matrixOverlay.style.display = 'none';
     });
 
     let currentSortColumn = null;
@@ -695,9 +688,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 highlightDiatonicRow(null, null);
             }
-
-            // Enforce Progressive Disclosure: Hide matrix on every new chord calculation
-            matrixOverlay.style.display = 'flex';
 
         } catch (error) {
             console.error('Error illuminating chord:', error);
