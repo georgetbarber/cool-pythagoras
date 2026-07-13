@@ -3,6 +3,9 @@
 V6 is an isolated, evolutionary improvement of V5. It does not
 import code, state, or assets from the original, V2, V3, or V4 applications.
 
+> Historical status: iteration 06, preserved for comparison. Active development
+> belongs in [`../../current`](../../current/).
+
 Its central rule is that musical information must retain a reference:
 
 - Notes are understood relative to a tonal centre.
@@ -46,7 +49,7 @@ src/
 ## Run
 
 ```bash
-cd apps/v6
+cd apps/history/06-playing-learning
 npm install
 npm run dev
 ```

@@ -1,7 +1,10 @@
 # Guitar Academy Dashboard v2
 
 This directory is the ground-up rebuild of the guitar dashboard. The original
-application is preserved separately in `../original`.
+application is preserved separately in `../01-original-prototype`.
+
+> Historical status: iteration 02, preserved for comparison. Active development
+> belongs in [`../../current`](../../current/).
 
 ## What is included
 
@@ -26,8 +29,14 @@ npm install
 npm run dev
 ```
 
-On the current Codex desktop environment, `start.command` uses the bundled Node
-runtime directly.
+`start.command` uses the locally installed Node.js and npm toolchain and installs
+missing dependencies before launching.
+
+From the repository root, this app lives at:
+
+```bash
+cd apps/history/02-typed-react-rebuild
+```
 
 ## Verify
 

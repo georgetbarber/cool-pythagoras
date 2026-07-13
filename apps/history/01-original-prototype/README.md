@@ -2,6 +2,9 @@
 
 This folder contains the original dependency-free browser application.
 
+> Historical status: iteration 01, preserved for comparison. Active development
+> belongs in [`../../current`](../../current/).
+
 ## Run
 
 Double-click `start.command`, or run:
@@ -31,5 +34,6 @@ tools/         Developer reporting utilities
 python3 tests/validate_chord_data.py
 ```
 
-This version is preserved for comparison. Active development should generally
-target `../v2`.
+This version is preserved as the project's starting point. See the root
+[project history](../../../docs/PROJECT_HISTORY.md) for what it proved and why
+the typed rebuild followed.

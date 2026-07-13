@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
-cd "$(dirname "$0")/apps/v5"
+cd "$(dirname "$0")/apps/current"
 exec ./start.command

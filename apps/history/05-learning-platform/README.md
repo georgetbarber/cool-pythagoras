@@ -3,6 +3,9 @@
 V5 is an isolated, relationship-first guitar learning application. It does not
 import code, state, or assets from the original, V2, V3, or V4 applications.
 
+> Historical status: iteration 05, preserved for comparison. Active development
+> belongs in [`../../current`](../../current/).
+
 Its central rule is that musical information must retain a reference:
 
 - Notes are understood relative to a tonal centre.
@@ -45,7 +48,7 @@ src/
 ## Run
 
 ```bash
-cd apps/v5
+cd apps/history/05-learning-platform
 npm install
 npm run dev
 ```

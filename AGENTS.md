@@ -48,6 +48,8 @@ relationships.
 
 ## Engineering
 
+- Treat `apps/current` as the active product. Use `apps/history` only for
+  comparison or narrowly scoped preservation fixes.
 - Preserve working code unless a targeted refactor is clearly safer.
 - Prefer small, high-impact improvements over broad rewrites.
 - Keep music and domain logic separate from UI where practical.

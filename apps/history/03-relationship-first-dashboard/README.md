@@ -3,6 +3,9 @@
 V3 is the relationship-first rebuild of the guitar learning dashboard. It is a
 separate application and does not import code or state from the original app or V2.
 
+> Historical status: iteration 03, preserved for comparison. Active development
+> belongs in [`../../current`](../../current/).
+
 ## Product Model
 
 The app keeps one tonal context active across eight workspaces:
@@ -40,12 +43,13 @@ The domain, guitar, and movement modules do not depend on React or the DOM.
 ## Run
 
 ```bash
+cd apps/history/03-relationship-first-dashboard
 npm install
 npm run dev
 ```
 
 The development server uses [http://localhost:4176](http://localhost:4176).
-`start.command` is also available for the Codex desktop runtime.
+`start.command` is also available on macOS.
 
 ## Verify
 
