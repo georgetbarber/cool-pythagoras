@@ -1,0 +1,9 @@
+.DS_Store
+
+# Generated application files
+**/dist/
+**/node_modules
+**/.npm-cache/
+**/playwright-report/
+**/test-results/
+**/*.tsbuildinfo

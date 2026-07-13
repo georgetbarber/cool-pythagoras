@@ -1,0 +1,9 @@
+{
+  "name": "guitar-academy-original",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "validate": "python3 tests/validate_chord_data.py"
+  }
+}
