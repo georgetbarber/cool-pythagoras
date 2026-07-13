@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Academy OS</title>
+    <link rel="stylesheet" href="src/styles/app.css">
+    <link rel="stylesheet" href="src/styles/practice-and-lessons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+    <!-- Animated background layers -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-mesh"></div>
+
+    <div class="app-shell">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar glass-panel">
+            <div class="brand">
+                <div class="brand-logo">G<span>//</span>A</div>
+                <div class="brand-name">GUITAR ACADEMY</div>
+            </div>
+            
+            <div class="nav-links">
+                <button class="nav-btn active" data-view="explorer">
+                    <span class="icon">🔍</span>
+                    <span>The Explorer</span>
+                </button>
+                <button class="nav-btn" data-view="world">
+                    <span class="icon">🌍</span>
+                    <span>World Systems</span>
+                </button>
+                <button class="nav-btn" data-view="games">
+                    <span class="icon">🎮</span>
+                    <span>Practice Games</span>
+                </button>
+                <button class="nav-btn" data-view="lessons">
+                    <span class="icon">📚</span>
+                    <span>Guided Lessons</span>
+                </button>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="input-row toggle-row theme-toggle-container">
+                    <label for="theme-toggle">DARK MODE</label>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button id="btn-daily-routine" class="btn-secondary">
+                    ⚡ QUICK ROUTINE
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- VIEW: EXPLORER (The Matrix) -->
+            <section id="view-explorer" class="view-section">
+                <header class="view-header glass-panel">
+                    <h2>The Matrix</h2>
+                    <div class="global-controls">
+                        <button id="btn-play-active" class="btn-icon" title="Play Active Chord Audibly">🔊</button>
+                    </div>
+                </header>
+
+                <div class="explorer-grid">
+                    <!-- Left Column: Controls -->
+                    <div class="explorer-controls glass-panel">
+                        <section class="control-group">
+                            <h3>Key</h3>
+                            <div class="input-row">
+                                <label for="key-root">ROOT</label>
+                                <select id="key-root"></select>
+                            </div>
+                            <div class="input-row">
+                                <label for="key-type">SYSTEM</label>
+                                <select id="key-type">
+                                    <optgroup label="Western Tonal">
+                                        <option value="major">Major</option>
+                                        <option value="minor">Minor</option>
+                                    </optgroup>
+                                    <optgroup label="Modal Frameworks">
+                                        <option value="dorian">Dorian</option>
+                                        <option value="mixolydian">Mixolydian</option>
+                                        <option value="phrygian">Phrygian</option>
+                                        <option value="lydian">Lydian</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="btn-group row">
+                                <button id="btn-rel-flip" class="btn-outline" title="Flip Relative">Flip Relative</button>
+                            </div>
+                            <div class="input-row toggle-row">
+                                <label for="focus-mode">FOCUS MODE (CORE 4)</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="focus-mode">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="input-row toggle-row">
+                                <label for="texture-toggle">TEXTURE (7THS)</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="texture-toggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="input-row toggle-row" style="margin-top: 0.5rem;">
+                                <label for="extended-toggle">EXTENDED (9ths/13ths)</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="extended-toggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="input-row toggle-row" style="margin-top: 1rem;">
+                                <label for="chromatic-override" style="color: var(--accent-secondary);">CHROMATIC OVERRIDE</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="chromatic-override">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <div class="divider"></div>
+
+                        <section class="control-group">
+                            <h3>Active Chord</h3>
+                            <div class="input-row">
+                                <label for="chord-root">ROOT</label>
+                                <select id="chord-root"></select>
+                            </div>
+                            <div class="input-row">
+                                <label for="chord-quality">QUALITY</label>
+                                <select id="chord-quality">
+                                    <option value="Major">Major</option>
+                                    <option value="Minor">Minor</option>
+                                    <option value="Diminished">Diminished</option>
+                                    <option value="Augmented">Augmented</option>
+                                    <option value="Dominant 7">Dominant 7</option>
+                                    <option value="Half-diminished 7">Half-diminished 7</option>
+                                    <option value="Diminished 7">Diminished 7</option>
+                                    <option value="Sus4">Sus4</option>
+                                    <option value="Dominant 7 sus4">Dominant 7 sus4</option>
+                                    <option value="Major 7 sus4">Major 7 sus4</option>
+                                    <option value="Major 9">Major 9</option>
+                                    <option value="Minor 9">Minor 9</option>
+                                    <option value="Dominant 9">Dominant 9</option>
+                                    <option value="Major 11">Major 11</option>
+                                    <option value="Minor 11">Minor 11</option>
+                                    <option value="Dominant 11">Dominant 11</option>
+                                    <option value="Major 13">Major 13</option>
+                                    <option value="Minor 13">Minor 13</option>
+                                    <option value="Dominant 13">Dominant 13</option>
+                                </select>
+                            </div>
+                            <div class="input-row" style="margin-top: 1rem;">
+                                <label for="voicing-mode">STRING ALLOCATION</label>
+                                <select id="voicing-mode">
+                                    <option value="all">Unconstrained (All Strings)</option>
+                                    <option value="triad">Triad Core (3 Strings)</option>
+                                    <option value="drop2">Drop 2 (4 Strings)</option>
+                                    <option value="full">Full Range Voicing</option>
+                                </select>
+                            </div>
+                        </section>
+                        
+                        <div class="divider"></div>
+
+                        <section class="control-group">
+                            <h3>Overlays</h3>
+                            <div class="input-row toggle-row">
+                                <label for="show-scale">SHOW SCALE</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="show-scale">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="input-row toggle-row">
+                                <label for="pentatonic-toggle" class="sub-label">PENTATONIC ONLY</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="pentatonic-toggle" disabled>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="input-row toggle-row">
+                                <label for="caged-toggle">CAGED SHAPES</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="caged-toggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="input-row toggle-row">
+                                <label for="perimeter-toggle">EUSTRESS PERIMETER</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="perimeter-toggle" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right Column: Visuals -->
+                    <div class="explorer-visuals">
+                        <div class="glass-panel diatonic-section">
+                            <div class="panel-header">
+                                <h3>Diatonic Foundations</h3>
+                                <button id="btn-reset-sort" class="btn-icon" style="font-size: 0.8rem; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--glass-border);">Reset Sort</button>
+                            </div>
+                            <div id="diatonic-table" class="data-table-container"></div>
+                        </div>
+                        
+                        <div id="chromatic-panel" class="glass-panel chromatic-section" style="display: none; border: 1px solid var(--accent-secondary);">
+                            <div class="panel-header">
+                                <h3 style="color: var(--accent-secondary);">Imported Tension / Chromatic Overrides</h3>
+                            </div>
+                            <div id="chromatic-table" class="data-table-container"></div>
+                        </div>
+                        
+                        <div id="extended-panel" class="glass-panel extended-section" style="display: none; border: 1px solid var(--accent-primary);">
+                            <div class="panel-header">
+                                <h3 style="color: var(--accent-primary);">Extended Structures (9ths/11ths/13ths)</h3>
+                            </div>
+                            <div id="extended-table" class="data-table-container"></div>
+                        </div>
+
+                        <div class="glass-panel progressions-section">
+                            <div class="panel-header">
+                                <h3>Progressions</h3>
+                            </div>
+                            <div id="progressions" class="progressions-container"></div>
+                        </div>
+
+                        <div class="glass-panel chord-dna-section">
+                            <div class="panel-header">
+                                <h3>Intervals</h3>
+                            </div>
+                            <div id="chord-dna" class="chord-dna-container"></div>
+                            <div id="rationale-readout" class="rationale-readout" style="margin-top: 1rem; font-style: italic; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--glass-border); padding-top: 0.8rem; display: none;">
+                            </div>
+                        </div>
+
+                        <div class="glass-panel fretboard-section">
+                            <div class="panel-header">
+                                <h3>The Matrix</h3>
+                                <div class="header-tools">
+                                    <select id="tuning-select" class="small-select">
+                                        <option value="standard">Standard E</option>
+                                        <option value="dropD">Drop D</option>
+                                        <option value="openG">Open G</option>
+                                        <option value="dadgad">DADGAD</option>
+                                    </select>
+                                    <span id="note-count-badge" class="badge"></span>
+                                </div>
+                            </div>
+                            <div id="fretboard-wrapper" style="position: relative; min-height: 200px;">
+                                <div id="fretboard" class="fretboard-container"></div>
+                            </div>
+                            <div class="fretboard-legend">
+                                <div class="legend-item"><span class="legend-dot root-dot"></span>Root</div>
+                                <div class="legend-item"><span class="legend-dot chord-dot"></span>Chord Tone</div>
+                                <div class="legend-item"><span class="legend-dot scale-dot"></span>Scale Tone</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: WORLD SYSTEMS -->
+            <section id="view-world" class="view-section" style="display:none;">
+                <div class="glass-panel" style="padding: 3rem; max-width: 800px; margin: 0 auto;">
+                    <h2 style="font-size: 2rem; margin-bottom: 1rem; color: var(--text-primary);">Alternative & Non-Western Systems</h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                        The matrix you have been studying maps the 12-tone equal temperament (12-TET) system configured specifically for functional Western harmony. However, treating this as the universal truth is a category error.
+                    </p>
+                    
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px; padding: 2rem; margin-bottom: 2rem;">
+                        <h3 style="color: var(--accent-primary); margin-bottom: 1rem;">Atonal / 12-Tone Serialism</h3>
+                        <p style="color: var(--text-primary); line-height: 1.6;">
+                            In the early 20th century, composers like Arnold Schoenberg dismantled the concept of a "Tonic" or home key. In 12-tone serialism, all 12 notes of the chromatic scale are treated with absolute equality. You cannot use the fretboard to map "tension" and "resolution" here, because tension requires a sovereign centre to pull against. In serialism, there is no gravity; you are floating in deep space.
+                        </p>
+
+                        <div style="margin-top: 2rem; border-top: 1px solid var(--glass-border); padding-top: 2rem;">
+                            <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">12-Tone Matrix Generator</h4>
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">Enter a Prime row using pitch class integers (0-11) separated by spaces.</p>
+                            <div class="input-row" style="max-width: 600px;">
+                                <input type="text" id="prime-row-input" value="0 1 2 3 4 5 6 7 8 9 10 11" style="flex:1; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 0.5rem; font-family: monospace;">
+                                <button id="btn-generate-matrix" class="btn-primary" style="margin-left: 1rem;">Generate</button>
+                            </div>
+                            <div id="serialism-matrix-container" style="margin-top: 2rem; overflow-x: auto;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px; padding: 2rem;">
+                        <h3 style="color: var(--accent-secondary); margin-bottom: 1rem;">Microtonal & Non-Western (Ragas & Maqams)</h3>
+                        <p style="color: var(--text-primary); line-height: 1.6; margin-bottom: 1rem;">
+                            Indian Classical Ragas and Arabic Maqams do not merely use different notes; they divide the octave into smaller intervals (microtones or shrutis) that do not exist on the standard guitar fretboard.
+                        </p>
+                        <p style="color: var(--text-primary); line-height: 1.6;">
+                            More importantly, these systems are not just scales—they dictate specific melodic movements, ornamental rules, and emotional or temporal contexts (e.g., a Raga meant only to be played at dawn). Forcing these systems onto a Western grid fundamentally strips them of their architectural integrity.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: GAMES -->
+            <section id="view-games" class="view-section" style="display:none;">
+                <div class="glass-panel empty-state">
+                    <h2>Practice</h2>
+                </div>
+            </section>
+
+            <!-- VIEW: LESSONS -->
+            <section id="view-lessons" class="view-section" style="display:none;">
+                <div class="glass-panel empty-state">
+                    <h2>Lessons</h2>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Audio Engine imported globally for testing -->
+    <script type="module">
+        import { AudioEngine } from './src/features/audio.js';
+        window.synth = new AudioEngine();
+    </script>
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
