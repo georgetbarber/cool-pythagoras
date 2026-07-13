@@ -24,6 +24,9 @@ and browser-local audio input/recording.
 
 ## Later Directions
 
+- A focused phone/commute practice experience for short no-instrument ear,
+  interval, note-location, and shape-recognition rounds; validate responsive web
+  or installable-web behaviour before assuming a native app is required.
 - Explicit page-context objects for cleaner feature isolation.
 - Alternate tunings built on tuning-aware interval geometry.
 - Richer chord formulas, omissions, and rootless/extended voicing analysis.

@@ -17,6 +17,8 @@ live here.
 5. [Development](DEVELOPMENT.md) — setup, commands, testing, and repository
    conventions.
 6. [Roadmap](ROADMAP.md) — evidence-based next directions and non-goals.
+7. [Additional note takeaways](additional-notes/README.md) — useful ideas
+   distilled from informal project notes and checked against the current app.
 
 ## Detailed Source Material
 
@@ -27,6 +29,8 @@ live here.
   notes.
 - Each folder under `apps/history/` has a README describing that milestone in
   its original context.
+- `additional-notes/` preserves relevant thoughts from informal notes without
+  copying superseded requests into the active backlog.
 
 Documentation should be updated in the same change as any behaviour or
 architecture that makes it inaccurate.

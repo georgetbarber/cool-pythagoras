@@ -17,6 +17,8 @@ understand why the product and architecture changed.
    [development guide](docs/DEVELOPMENT.md) before changing code.
 5. Review [lessons learned](docs/LESSONS_LEARNED.md) and the
    [roadmap](docs/ROADMAP.md) before proposing a large new feature.
+6. See [additional note takeaways](docs/additional-notes/README.md) for useful
+   personal project thoughts that were checked against the current product.
 
 ## Run the Current App
 
@@ -51,6 +53,7 @@ Open [http://localhost:4184](http://localhost:4184), or double-click
 │   ├── LESSONS_LEARNED.md     Product and engineering conclusions
 │   ├── DEVELOPMENT.md         Setup, testing, and working conventions
 │   ├── ROADMAP.md             Evidence-based future directions
+│   ├── additional-notes/      Relevant takeaways from informal project notes
 │   └── reviews/               Detailed product-review source material
 └── scripts/
     └── verify-all.sh          Validate every preserved iteration
