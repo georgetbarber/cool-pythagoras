@@ -1,7 +1,7 @@
 {
-  "name": "guitar-academy-v7",
+  "name": "guitar-academy-v8",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test"
   },
   "dependencies": {
+    "firebase": "^12.16.0",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
@@ -23,6 +24,7 @@
     "@vitejs/plugin-react": "6.0.2",
     "typescript": "6.0.3",
     "vite": "8.0.16",
+    "vite-plugin-pwa": "^1.3.0",
     "vitest": "4.1.8"
   }
 }

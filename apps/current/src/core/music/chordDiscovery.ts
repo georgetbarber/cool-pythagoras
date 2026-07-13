@@ -129,6 +129,14 @@ export function analyzeCandidateInContext(
     };
   }
   if (scaleRoot) {
+    if (context.mode === "minor" && normalize(root - context.tonic) === 7 && ["major", "dominant7"].includes(quality)) {
+      return {
+        roman,
+        relationship: "borrowed-or-modal",
+        functionLabel: "Raised-leading-tone dominant",
+        explanation: `${roman} borrows the raised 7th (the leading tone) from harmonic minor, giving a stronger pull to i than the natural-minor v. This is the most common borrowing in minor keys.`
+      };
+    }
     return {
       roman,
       relationship: "altered-diatonic-root",

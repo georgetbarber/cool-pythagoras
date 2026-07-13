@@ -3,4 +3,8 @@ dist/
 test-results/
 playwright-report/
 .playwright-browsers/
+.firebase/
 *.tsbuildinfo
+.env.local
+.env.*.local
+.firebaserc

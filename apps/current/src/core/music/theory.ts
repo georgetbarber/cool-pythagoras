@@ -48,7 +48,7 @@ export const MODES: Record<ModeId, {
     name: "Minor blues",
     intervals: [0, 3, 5, 6, 7, 10],
     degrees: ["1", "b3", "4", "b5", "5", "b7"],
-    character: "A six-note expressive collection built around minor colour and the blue note."
+    character: "The minor pentatonic (1, b3, 4, 5, b7) plus the b5 blue note: a six-note expressive collection built around minor colour."
   }
 };
 
@@ -112,9 +112,20 @@ export function chordToneDisplayLabel(label: string): string {
   return names[display] ?? display;
 }
 
+const TONIC_ALIASES: Record<string, PitchClass> = {
+  "C#": 1, "Db": 1,
+  "D#": 3, "Eb": 3,
+  "F#": 6, "Gb": 6,
+  "G#": 8, "Ab": 8,
+  "A#": 10, "Bb": 10
+};
+
 export function createContext(tonicName = "C", mode: ModeId = "major"): TonalContext {
-  const root = ROOTS.find(([name]) => name === tonicName) ?? ROOTS[0];
-  return { tonicName: root[0], tonic: root[1] as PitchClass, mode };
+  const root = ROOTS.find(([name]) => name === tonicName);
+  if (root) return { tonicName: root[0], tonic: root[1] as PitchClass, mode };
+  const aliased = TONIC_ALIASES[tonicName];
+  if (aliased !== undefined) return { tonicName, tonic: aliased, mode };
+  return { tonicName: ROOTS[0][0], tonic: ROOTS[0][1] as PitchClass, mode };
 }
 
 export function buildScale(context: TonalContext): ScaleTone[] {

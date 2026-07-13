@@ -287,11 +287,15 @@ export const HELP = {
   },
   romanNumerals: {
     title: "Why Roman numerals?",
-    body: "Roman numerals preserve harmonic relationships when a progression moves to another key. I-IV-V has the same function in C, F#, or Bb."
+    body: "Roman numerals preserve harmonic relationships when a progression moves to another key. I-IV-V has the same function in C, F#, or Bb. This app labels degrees relative to the major scale in every mode, so natural minor reads i, ii°, bIII, iv, v, bVI, bVII. Classical texts sometimes omit those flats in minor; both describe the same chords."
   },
   shape: {
     title: "What does a shape encode?",
     body: "A shape is a physical arrangement of intervals. Moving it changes absolute notes while preserving its internal relationship, except where tuning geometry changes."
+  },
+  intervalClass: {
+    title: "Interval or interval class?",
+    body: "When the app hunts positions across the whole neck it matches pitch-class distance, so a fifth above and a fourth below count as the same relationship. When direction and register matter, the prompt says so."
   },
   function: {
     title: "What is harmonic function?",

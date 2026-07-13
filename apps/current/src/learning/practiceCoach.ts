@@ -140,7 +140,7 @@ function intervalMove(
     skill: `coach-interval-${targetInterval}`,
     title: `Play the ${relationship}`,
     instruction: `Use ${rootName} on string ${rootPosition.string + 1}, fret ${rootPosition.fret} as the root. Play the root, then find at least two ${intervalName(targetInterval)}s from it.`,
-    setup: "Keep the physical root fixed. Name the distance before naming the target note.",
+    setup: "Keep the physical root fixed. Name the distance before naming the target note. Positions above and below the root both count: the app matches the relationship in any octave.",
     hint: targetInterval === 3 || targetInterval === 4
       ? "Compare the one-fret difference between the minor and major third shapes."
       : "Track the interval shape across string pairs and adjust when crossing the G-B tuning boundary.",

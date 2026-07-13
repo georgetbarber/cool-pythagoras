@@ -4,7 +4,8 @@ import {
   buildChords,
   buildScale,
   chordToneDisplayLabel,
-  createContext
+  createContext,
+  ROOTS
 } from "./theory";
 
 describe("V7 contextual music model", () => {
@@ -66,5 +67,22 @@ describe("V7 contextual music model", () => {
     expect(chordToneDisplayLabel("3")).toBe("3rd");
     expect(chordToneDisplayLabel("b3")).toBe("♭3");
     expect(chordToneDisplayLabel("b7")).toBe("♭7");
+  });
+
+  it("resolves every UI tonic without silently renaming it", () => {
+    const uiTonics = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+    const offered = new Set([...uiTonics, ...ROOTS.map(([name]) => name)]);
+    for (const tonicName of offered) expect(createContext(tonicName, "major").tonicName).toBe(tonicName);
+    expect(createContext("Db", "major").tonic).toBe(1);
+    expect(buildScale(createContext("Db", "major")).map((tone) => tone.name))
+      .toEqual(["Db", "Eb", "F", "Gb", "Ab", "Bb", "C"]);
+  });
+
+  it("keeps blues chord degrees selectable by their musical degree", () => {
+    const chords = buildChords(createContext("A", "blues"));
+    expect(chords.map((chord) => chord.degree)).toEqual([1, 4, 5]);
+    expect(chords.every((chord) => chord.quality === "dominant7")).toBe(true);
+    expect(chords.find((chord) => chord.degree === 4)?.roman).toBe("IV7");
+    expect(chords[4 - 1]).toBeUndefined();
   });
 });

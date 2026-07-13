@@ -53,7 +53,7 @@ export function FretboardLab({ state, dispatch, model }: FeatureProps) {
             <h2>Root on string {root.string + 1}, fret {root.fret}</h2>
             <p>Click any fret to make it the new physical root. Gold positions preserve the selected interval.</p>
           </div>
-          <HelpButton {...HELP.shape} />
+          <div className="help-actions"><HelpButton {...HELP.shape} /><HelpButton {...HELP.intervalClass} /></div>
         </div>
         <Fretboard
           scale={model.scale}

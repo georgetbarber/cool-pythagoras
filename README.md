@@ -4,7 +4,7 @@ Guitar Academy is a relationship-first guitar-learning project. It teaches how
 sound, intervals, scale degrees, chord tones, harmonic function, and fretboard
 shapes connect, rather than presenting theory as facts to memorise.
 
-The repository contains one current application and six preserved development
+The repository contains one current application and seven preserved development
 milestones. Start with the current app; use the history when you want to
 understand why the product and architecture changed.
 
@@ -33,6 +33,14 @@ npm run dev
 Open [http://localhost:4184](http://localhost:4184), or double-click
 `start.command` at the repository root on macOS after installing dependencies.
 
+## Publish GitHub, Web, and Mobile
+
+Double-click `PUBLISH_LIVE.command` at the repository root. It shows the complete
+change list, verifies the current app, and pushes `main` to GitHub. GitHub Actions
+then deploys the Firebase-hosted PWA used by the web and installed mobile versions.
+See the
+[publishing guide](docs/PUBLISHING.md) for first-run authentication and recovery.
+
 ## Repository Map
 
 ```text
@@ -41,10 +49,11 @@ Open [http://localhost:4184](http://localhost:4184), or double-click
 ├── CONTRIBUTING.md           Safe contribution workflow
 ├── AGENTS.md                 Project rules for coding agents
 ├── start.command             macOS launcher for the current app
+├── PUBLISH_LIVE.command      Verified GitHub and Firebase publisher
 ├── apps/
 │   ├── README.md             Application directory guide
-│   ├── current/              Current product (iteration 07 / V7)
-│   └── history/              Six runnable historical milestones
+│   ├── current/              Current product (iteration 08 / V8)
+│   └── history/              Seven runnable historical milestones
 ├── docs/
 │   ├── README.md             Documentation index
 │   ├── PROJECT_HISTORY.md     Origin, iteration timeline, and current state
@@ -61,11 +70,11 @@ Open [http://localhost:4184](http://localhost:4184), or double-click
 
 ## Current State
 
-`apps/current` is iteration 07, the recommended and only active development
-target. It combines a shared tonal context, relationship-labelled fretboard,
-guided learning, contextual ear work, adaptive retrieval, chord discovery,
-exact guitar voicings, progression analysis, browser-local recording, and a
-practice-first guitar coach.
+`apps/current` is iteration 08, the recommended and only active development
+target. It is a curriculum-led system with 48 competency-paced units, one clear
+daily session, production-based evidence, targeted practice, relationship tools,
+and a durable local-first Sketchbook for composing, recording, revising, and
+finishing original music.
 
 The historical apps remain intentionally isolated. They are evidence of the
 decisions made along the way, not packages that the current app imports.

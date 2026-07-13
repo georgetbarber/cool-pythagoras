@@ -10,6 +10,7 @@ These applications are preserved in development order:
 | 04 | [`04-connected-dashboard`](04-connected-dashboard/) | Coordinated overview and specialist views | 4178 |
 | 05 | [`05-learning-platform`](05-learning-platform/) | Curriculum, learner evidence, and platform boundaries | 4180 |
 | 06 | [`06-playing-learning`](06-playing-learning/) | Play Lab, instrument feedback, recording, and spaced practice | 4182 |
+| 07 | [`07-practice-first`](07-practice-first/) | Endless guitar coach, chord connections, and practice-first relationships | 4184 |
 
 They are historical evidence, not deprecated dependencies. Each remains
 independent and runnable for comparison. New product work belongs in

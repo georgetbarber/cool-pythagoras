@@ -1,39 +1,26 @@
-# V7 Diagnostic and Architecture
+# V8 Product Diagnostic and Architecture
 
-## Current System
+V7 proved the relationship-first theory and guitar domains, but its eleven equal
+workspaces still asked the learner to decide what to do and its evidence could
+not distinguish assisted recognition from independent musical use. Its Play Lab
+was temporary, its curriculum was incomplete, and creative recordings were not
+durable.
 
-V6 supplied a strong React/TypeScript relationship-learning application with
-global tonal context, derived scale and chord models, playable fretboard
-shapes, progression playback, chord discovery, browser-local recording, and
-adaptive theory retrieval.
+V8 therefore preserves those validated domains while replacing the product shell:
 
-Data flows from the versioned reducer in `src/application/store.ts` into a
-derived scale/chord model. Every workspace receives the same state, dispatch,
-and model. Page-specific interaction state stays local to each feature.
+- one Today recommendation and a competency-paced Path;
+- targeted Practice and contextual Explore tools;
+- a persistent Create workflow for original music;
+- typed activities and context-rich evidence;
+- History API routes and exact interruption recovery;
+- IndexedDB repositories for state, projects, and recordings.
 
-## Diagnostic Findings
+The detailed curriculum contract is in [curriculum-v8.md](curriculum-v8.md).
+Repository-wide system boundaries are in [../../../docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md).
 
-- Practice was a finite multiple-choice loop rather than an instrument-led session.
-- Play Lab named and explained chords but offered only prose experiments.
-- User progressions kept exact voicings but lacked sequence-level analysis.
-- `D3`, `C3`, and `I3` labels visually conflicted with note names.
-- Progression steps, ear resolution, playback, and stored context analysis
-  could become stale after changing the active musical context.
-- The domain and instrument layers were already sufficiently separated, so an
-  evolutionary improvement was safer than a rebuild.
+## Honest Boundaries
 
-## V7 Architecture
-
-- `learning/practiceCoach.ts` generates deterministic, testable guitar prompts.
-- `core/music/chordConnections.ts` owns next-chord and progression analysis.
-- `core/instrument/guitar.ts` ranks generated voicings by physical proximity.
-- Shared theory formatters produce learner-facing relationship labels.
-- Feature components orchestrate sessions without duplicating theory rules.
-
-## Future Ground-Up Direction
-
-A larger rebuild should introduce explicit page contexts, normalized saved
-progressions, a fingering-aware voicing graph, alternate tunings, richer chord
-formula coverage, and an instrument-input event layer that can support
-polyphonic recognition. Those changes are deliberately outside V7's focused
-scope.
+Pitch feedback is monophonic, onset assessment is limited to suitable material,
+and richer performances use recording plus structured self-review. Generated
+pitch layouts are called playable only after fingering feasibility validation.
+Ambiguous chromatic notes and chords may retain several contextual explanations.

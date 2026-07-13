@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildFretboard } from "../instrument/guitar";
 import { createContext } from "./theory";
-import { identifyChord } from "./chordDiscovery";
+import { analyzeCandidateInContext, identifyChord } from "./chordDiscovery";
 
 function shape(frets: readonly (number | null)[]) {
   const board = buildFretboard();
@@ -33,5 +33,10 @@ describe("V7 chord discovery", () => {
     const result = identifyChord(shape([null, null, null, 5, 3, null]), createContext("C", "major"));
     expect(result.candidates[0].quality).toBe("power");
     expect(result.candidates.some((candidate) => candidate.completeness === "partial")).toBe(true);
+  });
+
+  it("recognises the raised-leading-tone dominant in natural minor", () => {
+    expect(analyzeCandidateInContext(4, "dominant7", [0, 4, 7, 10], createContext("A", "minor")))
+      .toMatchObject({ roman: "V7", functionLabel: "Raised-leading-tone dominant" });
   });
 });

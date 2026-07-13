@@ -141,6 +141,25 @@ export function suggestChordConnections(
     }, candidate);
   }
 
+  if (context.mode === "minor" && candidate.root === context.tonic) {
+    const dominant = buildChordFromRoot(
+      context,
+      normalize(context.tonic + 7),
+      "dominant7",
+      "V7",
+      "Borrowed dominant",
+      "V7 raises the 7th degree to create a leading tone, borrowed from harmonic minor for a stronger return to i."
+    );
+    addUnique(suggestions, {
+      id: `minor-dominant-${context.tonicName}`,
+      chord: dominant,
+      category: "borrowed",
+      label: "Add a true dominant",
+      reason: `${dominant.symbol} replaces the natural-minor v with a raised-leading-tone dominant.`,
+      listenFor: "Compare v–i (gentle, modal) with V7–i (directed, classical)."
+    }, candidate);
+  }
+
   if (context.mode === "blues" || candidate.quality === "dominant7") {
     const bluesContext = { ...context, mode: "blues" as const };
     for (const chord of buildChords(bluesContext)) {

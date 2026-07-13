@@ -1,95 +1,58 @@
-# Guitar Academy — Current Application
+# Guitar Academy V8 — Musical Freedom Learning System
 
-This is iteration 07 (V7), the active product and the only application that
-should receive new feature development. It evolved from iteration 06 without
-discarding its tested music, guitar, learning, or playing foundations.
+V8 is the active application. It is a private, local-first guitar curriculum
+designed to develop musical agency: hear an idea, understand its relationships,
+find it on the instrument, vary it deliberately, and turn it into original music.
 
-For the full journey, read [Project History](../../docs/PROJECT_HISTORY.md).
+## Product shape
 
-## Product Focus
+- **Today** presents one balanced 25-minute session.
+- **Path** contains 48 competency-paced units across eight connected stages.
+- **Practice** targets sound, rhythm, ear, fretboard, phrasing and creative work.
+- **Create** stores sketches, exact voicings, revisions and recorded takes locally.
+- **Explore** connects tonal context, chromatic colour, harmony and fretboard position.
 
-The app makes real guitar practice the primary activity while preserving a
-shared tonal context across eleven workspaces:
+Every core unit includes listening, prediction, physical playing, rhythm,
+relationship explanation, variation, creation, transfer and reflection. Assisted
+attempts remain distinct from independent evidence; creative work is explained
+and compared rather than graded.
 
-| Workspace | Learner purpose |
-| --- | --- |
-| Dashboard | Orient and choose a useful next action |
-| Learn | Build prerequisite-aware understanding |
-| Explore | Relate one pitch to tonic, scale, chord, sound, and fretboard |
-| Fretboard | Map movable intervals, octaves, inversions, and compact shapes |
-| Harmony | Build chords and understand Roman numerals and function |
-| Progressions | Follow functional movement through time |
-| Ear | Hear relationships after establishing a tonic |
-| Practice | Retrieve theory and complete instrument-led coach prompts |
-| Play Lab | Discover chords, compare connections, record, and build progressions |
-| Play Along | Apply exact displayed voicings in time |
-| My Path | Set goals, genres, priorities, and practice time |
+## Pixel, offline use, and synchronisation
 
-## What Iteration 07 Adds
+V8 is an installable PWA. With Firebase configured, Google Authentication and
+Firestore synchronise progress, evidence, settings, and sketches across signed-in
+devices. The app shell and a small structured-data cache remain available offline;
+queued changes synchronise when connectivity returns. Complete manual backups can
+still be exported and imported.
 
-- Continuous Mixed Coach, Note Hunt, Interval Moves, Chord-Tone Targets, and
-  Triad Shapes sessions
-- Foundation, Moving, and Challenge difficulty ranges
-- Hint, reveal, self-assessment, accuracy, and useful streak feedback
-- Next-chord suggestions grounded in diatonic, resolution, borrowed,
-  modal/rock, and blues relationships
-- Nearby compact voicings that can be heard, loaded, or added directly
-- User-progression analysis with Roman numerals recalculated for a new tonal centre
-- Explicit `Key`, `Scale degree`, `Chord tone`, and `Interval` labels
-- Context resets that prevent stale progression, ear, voicing, and playback state
+Recordings are different: a take remains temporary until explicitly retained,
+retained takes stay on that device, and audio is never uploaded or synchronised.
+Settings reports retained-audio usage and can clear it without touching learning
+progress. Microphone feedback remains limited to reliable monophonic pitch,
+separated rhythm attacks and recorded self-comparison; V8 does not claim
+polyphonic performance recognition. There are no analytics.
 
-## Run
+The private live deployment is available at
+[learn-the-guitar.web.app](https://learn-the-guitar.web.app). Sign into that same
+address with the same Google account on the laptop and Pixel to share progress.
 
-Requirements: Node.js 20 or newer and npm.
+Generated guitar layouts are called playable only after fingering feasibility
+checks. Ambiguous harmony and pitches outside the active collection retain
+multiple possible meanings rather than being labelled wrong.
+
+## Run and verify
 
 ```bash
-cd apps/current
 npm install
 npm run dev
-```
-
-The app runs at [http://localhost:4184](http://localhost:4184). On macOS,
-`./start.command` launches it and installs missing dependencies.
-
-## Verify
-
-```bash
 npm test
 npm run build
 npm run test:e2e:install
 npm run test:e2e
 ```
 
-## Architecture
+The app runs at [http://localhost:4184](http://localhost:4184).
 
-```text
-src/
-  app/          Application shell and workspace composition
-  application/  Versioned state, commands, persistence, and derived model
-  audio/        Playback, microphone, rhythm, and recording support
-  components/   Shared fretboard, context, chord, shape, lesson, and help UI
-  content/      Validated lessons and progression content
-  core/
-    instrument/ Guitar geometry, voicings, proximity, and movement
-    music/      Tonal theory, discovery, chord connections, and analysis
-  features/     Eleven learning and playing workspaces
-  learning/     Learner evidence, quizzes, and coach prompt generation
-  styles/       Responsive visual system
-tests/e2e/      Desktop and mobile browser workflows
-```
-
-See [Current Architecture](../../docs/ARCHITECTURE.md) for ownership and data
-flow, and [`docs/`](docs/) for feature-specific diagnostics.
-
-## Honest Limits
-
-- Microphone pitch feedback is monophonic.
-- Rhythm assessment expects separated attacks.
-- Chord discovery recognises common triads, suspended and power chords, and
-  common sevenths rather than exhaustive extensions or rootless jazz voicings.
-- Generated shapes favour compact consecutive-string voicings and do not yet
-  model fingering difficulty, alternate tunings, or a complete chord dictionary.
-- Suggested connections are theory-grounded options, not claims that one
-  progression is uniquely correct.
-- Reference tones and progression playback are synthesised; recorded guitar
-  remains local to the browser and is not uploaded.
+See [`docs/curriculum-v8.md`](docs/curriculum-v8.md) for the curriculum contract.
+See [`docs/pixel-sync-setup.md`](docs/pixel-sync-setup.md) for Firebase deployment,
+moving existing laptop progress into sync, and installing on a Pixel.

@@ -1,9 +1,52 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["guitar-academy-icon.svg", "guitar-academy-icon-192.png", "guitar-academy-icon-512.png"],
+      manifest: {
+        name: "Guitar Academy",
+        short_name: "Guitar Academy",
+        description: "A relationship-first path from hearing and playing to original music.",
+        theme_color: "#15241f",
+        background_color: "#f3f1ea",
+        display: "standalone",
+        id: "/",
+        orientation: "any",
+        scope: "/",
+        start_url: "/today",
+        categories: ["education", "music"],
+        icons: [
+          { src: "/guitar-academy-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "/guitar-academy-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/guitar-academy-icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "/guitar-academy-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }
+        ]
+      },
+      workbox: {
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/__\//],
+        globPatterns: ["**/*.{js,css,html,svg,woff2}"],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
+      }
+    })
+  ],
   server: {
     port: 4184
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("/node_modules/firebase/") || id.includes("/node_modules/@firebase/")) return "firebase";
+        }
+      }
+    }
   }
 });

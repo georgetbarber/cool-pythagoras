@@ -138,17 +138,22 @@ export function startProgression(
 export function startVoicingProgression(
   voicings: readonly (readonly number[])[],
   bpm: number,
-  onStep?: (index: number) => void
+  onStep?: (index: number) => void,
+  beats?: readonly number[]
 ): () => void {
   stopAudio();
-  const barMs = (60000 / bpm) * 4;
+  const beatMs = 60000 / bpm;
+  let elapsed = 0;
   voicings.forEach((voicing, index) => {
+    const durationMs = beatMs * (beats?.[index] ?? 4);
+    const at = elapsed;
+    elapsed += durationMs;
     const timer = window.setTimeout(() => {
       onStep?.(index);
-      playVoicing(voicing, 0, Math.max(0.55, barMs * 0.0008));
-    }, index * barMs);
+      playVoicing(voicing, 0, Math.max(0.55, durationMs * 0.0008));
+    }, at);
     activeTimers.push(timer);
   });
-  activeTimers.push(window.setTimeout(() => onStep?.(-1), voicings.length * barMs));
+  activeTimers.push(window.setTimeout(() => onStep?.(-1), elapsed));
   return stopAudio;
 }

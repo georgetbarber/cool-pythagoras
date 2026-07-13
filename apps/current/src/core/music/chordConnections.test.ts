@@ -63,4 +63,16 @@ describe("V7 chord connections", () => {
     expect(analysis.romanSequence).toBe("I → bVII → I");
     expect(analysis.summary).toContain("borrowed");
   });
+
+  it("suggests the borrowed V7 from a natural-minor tonic", () => {
+    const context = createContext("A", "minor");
+    const tonic = buildChords(context)[0];
+    const voicing = generateShapes(tonic)[0];
+    const candidate = identifyChord(voicing.positions, context).candidates.find((item) =>
+      item.root === tonic.root && item.quality === tonic.quality
+    )!;
+    expect(suggestChordConnections(candidate, context).some((item) =>
+      item.chord.root === 4 && item.chord.quality === "dominant7"
+    )).toBe(true);
+  });
 });

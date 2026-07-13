@@ -6,10 +6,11 @@ The project began as an ambitious, dependency-free guitar-theory dashboard. It
 could display and calculate a great deal, but it presented advanced information
 before establishing the relationships a learner needed. Six subsequent
 iterations progressively separated domain logic from UI, centred every view on
-one musical context, introduced an actual curriculum and learner evidence, and
-finally made guitar playing and guided practice the primary activities.
+one musical context, introduced curriculum and learner evidence, made guitar
+playing primary, and finally reorganised the product around long-term musical
+agency and original work.
 
-The current product is iteration 07 in `apps/current`.
+The current product is iteration 08 in `apps/current`.
 
 ## Source-of-Truth Note
 
@@ -147,17 +148,17 @@ Why it changed:
 - Play Lab explained possible experiments in prose but did not make next actions immediate.
 - Saved progressions needed sequence-level analysis and robust context resets.
 
-### 07 — Practice-first current product
+### 07 — Practice-first coach
 
-Location: `apps/current`
+Location: `apps/history/07-practice-first`
 
-Iteration 07 is an evolutionary improvement of iteration 06 and the active
-development target. It adds an endless mixed guitar coach, difficulty ranges,
+Iteration 07 was an evolutionary improvement of iteration 06. It added an
+endless mixed guitar coach, difficulty ranges,
 hints and reveal flow, explicit relationship labels, theory-grounded next-chord
 suggestions, nearby voicings, progression re-analysis when context changes, and
 state resets that prevent stale musical explanations.
 
-What it currently does well:
+What it did well:
 
 - Keeps one tonal context across eleven learning and playing workspaces.
 - Connects sound, theory, fretboard geometry, chord shapes, and practice evidence.
@@ -165,17 +166,46 @@ What it currently does well:
 - Keeps microphone and recorded audio local to the browser.
 - Backs core music, guitar, learning, feature, and state behaviour with tests.
 
+Why it changed:
+
+- Eleven equal destinations still made the learner choose the pedagogy each day.
+- Evidence was too flat to distinguish assisted recognition from independent transfer.
+- Creative work and recordings did not survive reload as durable projects.
+- The curriculum needed a complete year-scale path rather than isolated activities.
+
+### 08 — Musical Freedom Learning System
+
+Location: `apps/current`
+
+Iteration 08 is a ground-up product and learning redesign that preserves the
+validated V7 domain foundations. It organises 48 core units across eight stages
+and eight interdependent competencies. The daily planner builds a 25-minute
+session around playing, time, relationships, ear-to-hand work, creation, and
+reflection. Activity-specific evidence records assistance and context, so a
+hint or reveal cannot masquerade as secure mastery.
+
+What it adds:
+
+- Five purposeful destinations: Today, Path, Practice, Create, and Explore.
+- Bookmarkable routes, browser history, interruption recovery, and deep links.
+- A typed activity contract from hearing and prediction through creation and transfer.
+- A durable IndexedDB Sketchbook with workflow stages, revisions, takes, and archive export/import.
+- Rhythm, motif, chromatic-description, and fingering-feasibility domain modules.
+- A calm responsive design with keyboard access, mobile bottom navigation, text alternatives, and reduced motion.
+- Automated checks for curriculum integrity, mastery, planning, persistence,
+  music logic, responsive browser journeys, and production builds.
+
 ## Where the Project Is Now
 
-The current app is a strong relationship-learning and guided-practice prototype,
-not a finished commercial learning platform. Its core models and product direction
-are coherent. Its present boundaries are explicit:
+The current app is a private, local-first musical-agency learning system. Its
+present feedback boundaries remain explicit:
 
 - pitch feedback is monophonic;
 - rhythm checking expects separated attacks;
 - chord discovery covers common triads, suspended/power chords, and common sevenths;
-- generated shapes favour compact consecutive-string voicings and do not model fingering difficulty;
+- generated shapes are labelled playable only after a fingering feasibility check;
 - alternate tunings and a complete chord dictionary are not yet supported;
-- synthesised tones are used rather than bundled sampled guitar audio.
+- synthesised tones are used rather than bundled sampled guitar audio;
+- creative recordings rely on browser MediaRecorder support and are assessed by structured self-review.
 
 See [ROADMAP.md](ROADMAP.md) for future directions grounded in these findings.

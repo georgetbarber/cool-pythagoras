@@ -2,104 +2,103 @@
 
 ## Scope
 
-This document describes `apps/current` (iteration 07). Historical applications
-are isolated snapshots and are not runtime dependencies.
+This document describes `apps/current` (iteration 08). Historical applications
+are isolated, runnable snapshots and are not runtime dependencies.
 
 ## System Shape
 
 ```text
-React feature pages
+URL route + React shell
         |
         v
-shared application state ----> derived active scale and chord model
-        |                               |
-        v                               v
-learning records/content         music + guitar domain modules
-        |                               |
-        +--------------+----------------+
+V8 store and commands -----> daily session + mastery derivation
+        |                              |
+        v                              v
+IndexedDB repositories       curriculum + activity definitions
+        |                              |
+        +--------------+---------------+
                        v
-              audio and browser adapters
+       music, guitar, rhythm, motif, and analysis domains
+                       |
+                       v
+          browser audio and recording adapters
 ```
 
-The application owns one active tonal context. Every workspace receives the
-same state, dispatcher, and derived model, while temporary interaction state
-such as a current quiz response remains local to the feature that owns it.
+The shell has five destinations: Today, Path, Practice, Create, and Explore.
+History API routes are durable UI state; an activity can open a tool and return
+to its exact attempt, assistance, reflection, and timing state.
 
 ## Source Ownership
 
 ```text
 src/
-  app/          Shell, navigation, and workspace composition
-  application/  Versioned global state, reducer commands, persistence, derived model
-  audio/        Playback, microphone analysis, rhythm analysis, and recording support
-  components/   Shared context, fretboard, chord, shape, lesson, and help UI
-  content/      Lesson catalogue and progression definitions
+  app/             V8 shell, first-run diagnostic, navigation, overlays
+  v8/
+    curriculum.ts  Eight stages, 48 units, typed activity definitions, validation
+    learning.ts    Sessions, evidence, mastery, transfer, progress summaries
+    repository.ts  IndexedDB, fallback storage, blobs, archive export/import
+    store.tsx       Versioned product state, commands, routing, persistence
+    components/     Activity player, micro-study, rhythm notation, settings
+    features/       Today, Path, Practice, Create, Explore
   core/
-    music/      Tonal context, scales, chords, spelling, discovery, and connections
-    instrument/ Guitar tuning, fret geometry, voicings, proximity, and movement
-  features/     Eleven user-facing learning and playing workspaces
-  learning/     Learner evidence, recommendations, quizzes, and coach prompt generation
-  styles/       Global responsive visual system
+    music/          Theory, rhythm, motif, and chromatic descriptions
+    instrument/     Fretboard geometry, shapes, transitions, fingering feasibility
+  audio/            Playback, honest limited analysis, browser recording
+  components/       Shared relationship visualisations
+  styles/           Responsive V8 visual and accessibility system
 ```
 
-## Application State
+The V7 modules retained outside `src/v8` remain the validated source for pitch
+spelling, tonal context, chord construction, fretboard geometry, playback, and
+limited microphone analysis. New V8 UI does not duplicate those constants.
 
-`src/application/store.ts` owns durable cross-page state:
+## Learning and Evidence
 
-- active tonic and mode;
-- selected pitch, interval, chord, fret position, and shape;
-- progression and seventh-chord settings;
-- relationship/note label mode and theme;
-- learner profile and learning evidence.
+Curriculum is data, not page markup. Every core unit includes sound, ear-to-hand,
+technique in context, rhythm, relationship explanation, variation, creation,
+transfer, and reflection. Validation rejects broken prerequisites, duplicate IDs,
+missing activity types, invalid budgets, and incomplete assets.
 
-The reducer resets dependent selections when tonal context changes. This is a
-musical correctness requirement: a label or analysis derived in one key must not
-remain visible as if it described another.
+Evidence records source, assistance, outcome, activity, time, and musical context.
+Mastery is derived: secure requires independent success on two different days;
+transfer-ready also requires a successful changed context. Creative work is
+tracked as artifacts and revisions, not reduced to a creativity score.
 
-State is stored in browser `localStorage` under a versioned envelope. Invalid or
-older state falls back safely to defaults. The app remains usable when storage is
-unavailable.
+## Persistence and Privacy
 
-## Domain Boundaries
+IndexedDB stores V8 state and device-only recorded blobs behind a repository
+interface. Lightweight schema metadata and a graceful fallback use local storage.
+Saves are automatic. A versioned `.guitar-academy` archive exports and imports
+JSON plus retained local recordings.
 
-The music and instrument cores do not depend on React or the DOM.
+When configured, Firebase Authentication and Firestore synchronise structured
+learning data. Evidence is append-only; settings use last-modified resolution;
+sketches use newest-edit resolution while merging revision history; deletion
+tombstones prevent stale resurrection. Firestore rules isolate every learner under
+their authenticated user ID. The service worker makes the application installable
+and caches its shell for offline use.
 
-- `core/music` answers theoretical questions: spelling, scale membership,
-  degrees, chord construction, Roman numerals, function, chord candidates, and
-  contextual chord connections.
-- `core/instrument` answers guitar questions: pitches at positions, interval
-  geography, compact voicings, inversions, CAGED regions, movement, and nearby shapes.
-- `learning` turns domain facts and learner evidence into prompts,
-  recommendations, explanations, and review timing.
-- `features` orchestrate interactions. They should not invent alternate theory rules.
-
-## Audio and Privacy
-
-Playback uses browser audio synthesis. Microphone access and recording are
-opt-in. Pitch/rhythm analysis and recorded takes stay in the browser; no server
-or upload layer exists in this repository. Recorded blobs are held in memory and
-discarded when the page closes.
+Recordings are temporary by default and are explicitly excluded from cloud
+documents. Retained audio stays on one device and can be measured or cleared.
+There are no analytics. Microphone feedback claims only clean sustained
+monophonic pitch and suitable onset timing; richer performances use comparison
+and self-review.
 
 ## Test Strategy
 
-The current test suite covers:
-
-- contextual theory and spelling;
-- chord discovery and chord connections;
-- fretboard geometry, labels, shapes, and proximity;
-- learner evidence and practice-coach prompt generation;
-- reducer behaviour and stale-state prevention;
-- feature-page rendering;
-- audio-analysis primitives;
-- desktop/mobile browser flows and denied microphone access.
-
-Unit tests live beside source. Browser tests live under `tests/e2e`.
+Unit tests cover theory, spelling, chord relationships, fretboard geometry,
+fingering feasibility, rhythm, motif transformation, chromatic interpretation,
+curriculum integrity, mastery, and session budgets. Browser journeys cover first
+launch, navigation/history, activity evidence, interrupted work, Sketchbook
+persistence, microphone denial, exports, and 320/390 px layouts. Production build
+success is part of the release gate.
 
 ## Architectural Rules
 
-1. Add a concept to the pure domain before exposing it in UI.
-2. Derive labels; do not copy music constants into components.
-3. Keep global state to information that must coordinate pages.
-4. Reset or re-derive dependent state when tonal context changes.
-5. Keep browser capabilities behind opt-in adapters and state limitations clearly.
-6. Add curriculum content as data where possible, not hard-coded page sequences.
+1. Put musical rules in pure domains before exposing them in UI.
+2. Derive relationship labels from shared context; do not copy constants.
+3. Treat assistance, outcome, and context as distinct learning evidence.
+4. Keep creation durable and preserve revision history.
+5. Label generated note layouts honestly until fingering validation passes.
+6. Make routes refreshable and activity interruptions resumable.
+7. Keep browser capabilities opt-in, local, and explicit about limitations.
