@@ -1,6 +1,9 @@
 import type { MicroStudy as MicroStudyType } from "../types";
+import { labelLines, legendFor, NOTATION_LABEL } from "../notation";
 
 export function MicroStudy({ study }: { study: MicroStudyType }) {
+  const lines = labelLines(study.tab);
+  const legend = legendFor(lines);
   return (
     <figure className="micro-study" aria-label={`${study.title}. ${study.purpose}`}>
       <figcaption>
@@ -8,17 +11,18 @@ export function MicroStudy({ study }: { study: MicroStudyType }) {
         <strong>{study.title}</strong>
         <small>{study.tempo} BPM · {study.metre} · {study.rhythm}</small>
       </figcaption>
-      <div className="tab-staff" role="img" aria-label={`Tab and performance guide: ${study.tab.join(". ")}`}>
-        {study.tab.map((line) => <code key={line}>{line}</code>)}
+      <div className="tab-staff" role="img" aria-label={`Notation guide: ${lines.map((line) => `${NOTATION_LABEL[line.type] || "guide"}: ${line.text}`).join(". ")}`}>
+        {lines.map((line, index) => (
+          <div className="tab-line" key={`${line.text}-${index}`}>
+            {NOTATION_LABEL[line.type] && <span className={`line-label label-${line.type}`}>{NOTATION_LABEL[line.type]}</span>}
+            <code>{line.text}</code>
+          </div>
+        ))}
       </div>
       <details className="tab-legend">
         <summary>How to read this</summary>
         <ul>
-          <li>Each row is a guitar string. Low to high, the six strings are <b>E A D G B e</b> (the last <b>e</b> is the thinnest).</li>
-          <li>A number is the fret to press on that string. <b>0</b> means play the string open (no finger). <b>3</b> means the 3rd fret.</li>
-          <li><b>x</b> means mute or don't sound that string. <b>|</b> is just a bar line dividing the beats.</li>
-          <li>Read left to right in time. A <b>Count</b> row (e.g. “1 + 2 +”) shows where each beat and off-beat falls.</li>
-          <li>No guitar to hand? You can still do the listening and singing tasks by ear.</li>
+          {legend.map((entry) => <li key={entry}>{entry}</li>)}
         </ul>
       </details>
     </figure>

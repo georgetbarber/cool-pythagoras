@@ -49,7 +49,7 @@ function V8Application() {
       </main>
       <nav className="mobile-nav" aria-label="Mobile learning navigation">{NAV.map((item) => <button className={state.route === item.id ? "is-active" : ""} onClick={() => navigate(item.id)} key={item.id}><i>{item.symbol}</i><span>{item.label}</span></button>)}</nav>
       <button className="mobile-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Open settings and data">⚙</button>
-      {state.activeActivityId && <div className="activity-overlay"><ActivityPlayer activityId={state.activeActivityId} onClose={() => dispatch({ type: "openActivity", activityId: "" })} /></div>}
+      {state.activeActivityId && <div className="activity-overlay"><ActivityPlayer key={state.activeActivityId} activityId={state.activeActivityId} onClose={() => dispatch({ type: "openActivity", activityId: "" })} /></div>}
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
     </div>
   );

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { playHarmonicRelationship, playMelodicRelationship } from "../../audio/engine";
 import { createContext, normalize } from "../../core/music/theory";
-import { activityById, unitById } from "../curriculum";
+import { activityById, unitById, CURRICULUM } from "../curriculum";
 import { createEvidence } from "../learning";
 import { useV8Store } from "../store";
-import type { Assistance, EvidenceOutcome } from "../types";
+import type { ActivityDefinition, Assistance, EvidenceOutcome } from "../types";
 import { MicroStudy } from "./MicroStudy";
 import { RhythmNotation } from "./RhythmNotation";
 
@@ -38,6 +38,7 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
   const [earIndex, setEarIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [caption, setCaption] = useState<string | null>(null);
+  const [justCompleted, setJustCompleted] = useState<EvidenceOutcome | null>(null);
   const unit = useMemo(() => unitById(activity?.unitId ?? state.activeUnitId), [activity?.unitId, state.activeUnitId]);
   if (!activity) return null;
 
@@ -79,7 +80,19 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
       }
     );
     dispatch({ type: "recordActivity", activityId: activity.id, evidence, reflection: reflection.trim() });
-    onClose?.();
+    setJustCompleted(outcome);
+  };
+
+  // The next thing to do: the next unfinished activity in this unit, then the first
+  // unfinished activity of a later unit. Treats the one just completed as done.
+  const nextActivity = (): ActivityDefinition | null => {
+    const done = new Set([...state.completedActivityIds, activity.id]);
+    const index = unit.activities.findIndex((item) => item.id === activity.id);
+    const inUnit = unit.activities.slice(index + 1).find((item) => !done.has(item.id))
+      ?? unit.activities.find((item) => !done.has(item.id));
+    if (inUnit) return inUnit;
+    const laterUnit = CURRICULUM.find((candidate) => candidate.order > unit.order && candidate.activities.some((item) => !done.has(item.id)));
+    return laterUnit?.activities.find((item) => !done.has(item.id)) ?? null;
   };
 
   const responseGuide = activity.kind === "listen-compare"
@@ -89,6 +102,37 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
       : activity.kind === "reflection"
         ? "Write a specific observation and next action, then save it below."
         : "Make the musical attempt described above, listen back if useful, then choose the result that best describes it.";
+
+  if (justCompleted) {
+    const next = nextActivity();
+    const outcomeLabel = OUTCOMES.find((item) => item.value === justCompleted)?.label ?? "Logged";
+    const sameUnit = next && next.unitId === unit.id;
+    return (
+      <section className="activity-player activity-done" aria-labelledby="activity-title">
+        <header className="activity-header">
+          <button className="icon-button" onClick={onClose} aria-label="Close activity">←</button>
+          <div><span>{unit.title}</span><h1 id="activity-title">Logged: {activity.title}</h1><p>Recorded as “{outcomeLabel}”. Progress is built from real attempts, so this counts.</p></div>
+        </header>
+        <div className="done-panel card">
+          <span className="done-check" aria-hidden="true">✓</span>
+          {next
+            ? <>
+                <h2>Keep the momentum going</h2>
+                <p>{sameUnit ? "Next in this unit:" : "You’ve finished this unit — next up:"} <strong>{next.title}</strong> <small>({next.kind.replaceAll("-", " ")} · {next.minutes} min)</small></p>
+                <div className="done-actions">
+                  <button className="primary-action large" onClick={() => dispatch({ type: "openActivity", activityId: next.id })}>Continue to next →</button>
+                  <button className="text-action" onClick={onClose}>Stop here for now</button>
+                </div>
+              </>
+            : <>
+                <h2>That’s everything available for now</h2>
+                <p>You’ve completed every activity currently unlocked. Take a break, or explore what you’ve built.</p>
+                <div className="done-actions"><button className="primary-action" onClick={onClose}>Back to my learning</button></div>
+              </>}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="activity-player" aria-labelledby="activity-title">

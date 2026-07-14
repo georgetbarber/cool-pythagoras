@@ -65,7 +65,8 @@ function reducer(state: V8State, action: Action): V8State {
     case "resumeActivity": return { ...state, activeActivityId: state.resumeActivityId, resumeActivityId: null };
     case "recordActivity": return {
       ...state,
-      activeActivityId: null,
+      // activeActivityId is intentionally kept so the player can show a completion
+      // panel with a "continue to next" action; the player closes itself explicitly.
       resumeActivityId: null,
       completedActivityIds: [...new Set([...state.completedActivityIds, action.activityId])],
       evidence: [...state.evidence, ...action.evidence],
