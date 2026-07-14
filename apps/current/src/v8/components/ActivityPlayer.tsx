@@ -9,10 +9,23 @@ import { MicroStudy } from "./MicroStudy";
 import { RhythmNotation } from "./RhythmNotation";
 
 const OUTCOMES: Array<{ value: EvidenceOutcome; label: string; description: string }> = [
-  { value: "retry", label: "Needs another pass", description: "I could not yet control or explain it." },
-  { value: "partial", label: "Partly there", description: "Some of it worked, but not reliably." },
-  { value: "successful", label: "Successful today", description: "I completed the observable action deliberately." }
+  { value: "retry", label: "Needs another pass", description: "Not yet — I couldn’t do the success action above this time." },
+  { value: "partial", label: "Partly there", description: "Some of it worked, but not the whole thing or not reliably." },
+  { value: "successful", label: "Successful today", description: "Yes — I did the success action above, deliberately." }
 ];
+
+const INTERVAL_NAMES = [
+  "the home note (tonic) on its own", "a minor 2nd above home", "a major 2nd above home",
+  "a minor 3rd above home", "a major 3rd above home", "a perfect 4th above home",
+  "a tritone above home", "a perfect 5th above home", "a minor 6th above home",
+  "a major 6th above home", "a minor 7th above home", "a major 7th above home"
+];
+
+function earCaption(semitones: number, harmonic: boolean): string {
+  const name = INTERVAL_NAMES[((semitones % 12) + 12) % 12];
+  if (semitones % 12 === 0) return `You should hear ${name}.`;
+  return harmonic ? `You should hear home and ${name} sounding together.` : `You should hear home, then ${name}.`;
+}
 
 export function ActivityPlayer({ activityId, onClose }: { activityId: string; onClose?: () => void }) {
   const { state, dispatch } = useV8Store();
@@ -23,6 +36,8 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
   const [reflection, setReflection] = useState("");
   const [attempted, setAttempted] = useState(false);
   const [earIndex, setEarIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [caption, setCaption] = useState<string | null>(null);
   const unit = useMemo(() => unitById(activity?.unitId ?? state.activeUnitId), [activity?.unitId, state.activeUnitId]);
   if (!activity) return null;
 
@@ -34,6 +49,9 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
     setEarIndex((index) => index + 1);
     if (harmonic) playHarmonicRelationship(tonicPc, normalize(tonicPc + semitones));
     else playMelodicRelationship(tonicPc, normalize(tonicPc + semitones));
+    setCaption(earCaption(semitones, harmonic));
+    setPlaying(true);
+    window.setTimeout(() => setPlaying(false), 2200);
   };
   const useHint = () => {
     setHint(true);
@@ -64,6 +82,14 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
     onClose?.();
   };
 
+  const responseGuide = activity.kind === "listen-compare"
+    ? "Play the micro-study yourself, then choose the result that honestly describes how controllable and explainable it felt."
+    : activity.kind === "sing-predict"
+      ? "Make your prediction, play or sing the idea, then choose the result that describes the comparison."
+      : activity.kind === "reflection"
+        ? "Write a specific observation and next action, then save it below."
+        : "Make the musical attempt described above, listen back if useful, then choose the result that best describes it.";
+
   return (
     <section className="activity-player" aria-labelledby="activity-title">
       <header className="activity-header">
@@ -76,6 +102,15 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
           <span className="activity-kind">{activity.kind.replaceAll("-", " ")}</span>
           <h2>{activity.instruction}</h2>
           <p className="activity-prompt">{activity.prompt}</p>
+          <aside className="response-guide">
+            <strong>How to answer</strong>
+            <p>{responseGuide}</p>
+            <small>This is a practice task, not a hidden right-or-wrong quiz. Your answer is the result you report after trying it.</small>
+          </aside>
+          <aside className="do-now">
+            <strong>Do this now</strong>
+            <p>{activity.action}</p>
+          </aside>
           <MicroStudy study={unit.microStudy} />
           {activity.kind === "rhythm" && <RhythmNotation pattern={unit.microStudy.rhythm} metre={unit.microStudy.metre} />}
           {["listen-compare", "sing-predict", "relationship"].includes(activity.kind) && (
@@ -84,7 +119,13 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
               {!(targets.length === 1 && targets[0] === 0) && <button className="secondary-action" onClick={() => hear(true)}>Hear together</button>}
             </div>
           )}
-          {["technique", "rhythm", "play-reveal", "variation", "transfer"].includes(activity.kind) && (
+          {["listen-compare", "sing-predict", "relationship"].includes(activity.kind) && (
+            <div className={`audio-feedback ${playing ? "is-playing" : ""}`} role="status" aria-live="polite">
+              <span className="audio-dot" aria-hidden="true">♪</span>
+              <p>{caption ?? "Tap the button above to hear it. No sound? Check your volume and that the device isn’t muted, then tap again."}</p>
+            </div>
+          )}
+          {["technique", "rhythm", "variation", "transfer"].includes(activity.kind) && (
             <button className={`attempt-pad ${attempted ? "is-done" : ""}`} onClick={() => setAttempted(true)}>
               <strong>{attempted ? "Attempt recorded" : "Play the task now"}</strong>
               <span>{attempted ? "Listen to the result before assessing it." : "Tap after you have made a deliberate attempt on the guitar."}</span>
@@ -106,14 +147,16 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
             <button onClick={useHint}>Use a hint</button>
             <button onClick={useReveal}>Reveal the reference</button>
           </div>
+          <small className="help-note">Using help is completely fine. It's still recorded — but an attempt with a hint or reveal is kept separate and doesn't count toward “Secure”, so your independent progress stays honest.</small>
           {hint && <aside className="guidance"><strong>Hint</strong><p>{activity.hint}</p></aside>}
           {reveal && <aside className="guidance reveal"><strong>Reference, not a shortcut</strong><p>{activity.reveal}</p></aside>}
         </article>
 
         <aside className="activity-check card">
-          <span>Observable outcome</span>
-          <p>{activity.observable}</p>
+          <span>How did it go?</span>
+          <div className="success-criterion"><small>You’ve succeeded when</small><p>{activity.observable}</p></div>
           <div className="assistance-state"><small>Evidence status</small><strong>{assistance === "none" ? "Independent attempt" : `${assistance} used`}</strong></div>
+          <p className="outcome-lead">Pick the option that matches what just happened:</p>
           <div className="outcome-buttons">
             {OUTCOMES.map((outcome) => (
               <button disabled={!attempted} onClick={() => complete(outcome.value)} key={outcome.value}>
@@ -121,7 +164,7 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
               </button>
             ))}
           </div>
-          {!attempted && <small>Complete the musical action before assessing it.</small>}
+          {!attempted && <small>Make the attempt first; these are your answer choices.</small>}
         </aside>
       </div>
     </section>

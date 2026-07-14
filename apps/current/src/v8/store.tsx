@@ -30,7 +30,7 @@ export const DEFAULT_STATE: V8State = {
   evidence: [],
   settings: {
     instrument: "electric", dailyMinutes: 25, tonicName: "C", mode: "major", theme: "light",
-    reducedMotion: false, diagnosticComplete: false, startingBaseline: "some"
+    reducedMotion: false, diagnosticComplete: false, startingBaseline: "repair"
   },
   sketches: [], deletedSketchIds: {}, activeSketchId: null, lastReflection: ""
 };

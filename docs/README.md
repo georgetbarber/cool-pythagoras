@@ -17,7 +17,9 @@ live here.
 5. [Development](DEVELOPMENT.md) — setup, commands, testing, and repository
    conventions.
 6. [Roadmap](ROADMAP.md) — evidence-based next directions and non-goals.
-7. [Additional note takeaways](additional-notes/README.md) — useful ideas
+7. [Future features](FUTURE_FEATURES.md) — the planned additions and deferred
+   work backlog.
+8. [Additional note takeaways](additional-notes/README.md) — useful ideas
    distilled from informal project notes and checked against the current app.
 
 ## Detailed Source Material

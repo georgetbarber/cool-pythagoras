@@ -141,20 +141,41 @@ function tuple(value: unknown[]): UnitSeed {
   return { title, focus, outcome, strands, study, earTargets, overrides };
 }
 
-const ACTIVITY_TEMPLATE: Array<[ActivityKind, EvidenceSource, number, string, string]> = [
-  ["listen-compare", "recognition", 3, "Hear the relationship", "Listen twice: first for overall character, then for what changes against the reference."],
-  ["sing-predict", "production", 3, "Predict before playback", "Sing or hum the target before hearing it, then compare without judging the first attempt."],
-  ["technique", "performance", 5, "Put it under the hands", "Play slowly enough to control attack, release, muting and unnecessary tension."],
-  ["rhythm", "performance", 5, "Place it in time", "Count aloud, internalise the subdivision, then play while the pulse continues through rests."],
-  ["relationship", "recognition", 4, "Name what stays constant", "Describe the root, interval, degree, chord role or time relationship that makes the example transferable."],
-  ["variation", "production", 5, "Change one dimension", "Keep one musical identity constant and change exactly one of pitch, rhythm, register, articulation or harmony."],
-  ["creative", "creation", 5, "Make a small musical object", "Create two to four bars that use the relationship for an audible purpose, not merely as an example."],
-  ["transfer", "transfer", 5, "Move it somewhere new", "Apply the idea in a different key, neck region, tempo or instrument context."],
-  ["reflection", "reflection", 2, "Listen back and decide", "Name what became more controllable, what remains uncertain and one choice worth keeping."]
+// Each template carries a concept sentence (instruction), a concrete "do this now" step (action)
+// and a specific "you've succeeded when" criterion (doneWhen). action/doneWhen are second-person
+// and self-contained so a first-time user knows exactly what to do and when the task is finished.
+const ACTIVITY_TEMPLATE: Array<[ActivityKind, EvidenceSource, number, string, string, string, string]> = [
+  ["listen-compare", "recognition", 3, "Hear the relationship", "Listen twice: first for overall character, then for what changes against the reference.",
+    "Tap “Hear reference and target”, listen twice, then say out loud what changes between the two sounds.",
+    "you can describe, in your own words, how the target sound differs from the reference."],
+  ["sing-predict", "production", 3, "Predict before playback", "Sing or hum the target before hearing it, then compare without judging the first attempt.",
+    "Sing or hum your prediction out loud first, then tap to hear it and compare the two.",
+    "you made a prediction out loud before listening, and can say how close it was."],
+  ["technique", "performance", 5, "Put it under the hands", "Play slowly enough to control attack, release, muting and unnecessary tension.",
+    "Play the study slowly on the guitar, then tap “Play the task now” once you’ve made a controlled attempt.",
+    "you played it with a controlled attack and clean release, without unnecessary tension."],
+  ["rhythm", "performance", 5, "Place it in time", "Count aloud, internalise the subdivision, then play while the pulse continues through rests.",
+    "Count the beat out loud, play the pattern in time, then tap “Play the task now”.",
+    "you kept a steady pulse through the whole pattern, including the rests."],
+  ["relationship", "recognition", 4, "Name what stays constant", "Describe the root, interval, degree, chord role or time relationship that makes the example transferable.",
+    "Play or hear the example, then name the one thing — root, interval, degree or chord role — that stays constant.",
+    "you can name the relationship that lets this example move to another key or position."],
+  ["variation", "production", 5, "Change one dimension", "Keep one musical identity constant and change exactly one of pitch, rhythm, register, articulation or harmony.",
+    "Play the original, then play it again changing exactly one thing (pitch, rhythm, register, articulation or harmony), and tap “Play the task now”.",
+    "you changed exactly one dimension while the original idea stayed recognisable."],
+  ["creative", "creation", 5, "Make a small musical object", "Create two to four bars that use the relationship for an audible purpose, not merely as an example.",
+    "Open a new sketch, make two to four bars that use the idea, then come back and describe what you made.",
+    "you saved a two-to-four-bar sketch that uses the idea for a real musical purpose."],
+  ["transfer", "transfer", 5, "Move it somewhere new", "Apply the idea in a different key, neck region, tempo or instrument context.",
+    "Play the idea again in a new key, neck region or tempo, then tap “Play the task now”.",
+    "the idea still sounds like itself in the new context."],
+  ["reflection", "reflection", 2, "Listen back and decide", "Name what became more controllable, what remains uncertain and one choice worth keeping.",
+    "In the box below, write one thing that improved, one thing still uncertain, and one choice to keep. Then save.",
+    "you’ve written a specific observation and a concrete next action."]
 ];
 
 function makeActivity(unitId: string, seed: UnitSeed, index: number, template: typeof ACTIVITY_TEMPLATE[number]): ActivityDefinition {
-  const [kind, source, minutes, title, instruction] = template;
+  const [kind, source, minutes, title, instruction, action, doneWhen] = template;
   const override = seed.overrides?.[kind];
   return {
     id: `${unitId}-${kind}`,
@@ -166,13 +187,8 @@ function makeActivity(unitId: string, seed: UnitSeed, index: number, template: t
     minutes,
     competencyIds: seed.strands.map((strand) => `${strand}:${unitId}`),
     source,
-    observable: kind === "reflection"
-      ? "A specific written observation and next action."
-      : kind === "creative"
-        ? "A saved musical sketch with an intention."
-        : kind === "transfer"
-          ? "The relationship remains recognisable in a changed context."
-          : "A deliberate attempt followed by an honest outcome report.",
+    action,
+    observable: doneWhen,
     prompt: `${seed.study[0]}: ${seed.study[3]}. ${seed.study[4].join(" · ")}`,
     hint: `Reduce the tempo or material. Keep ${seed.focus} as the only problem you are solving.`,
     reveal: `Reference: ${seed.study[4].join(" / ")}. The goal is to hear and control ${seed.focus}, not copy mechanically.`,

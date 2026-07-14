@@ -6,6 +6,7 @@ import { analyzeChromaticPitch } from "../../core/music/chromatic";
 import { buildChords, buildScale, createContext, normalize, noteName } from "../../core/music/theory";
 import { generateShapes } from "../../core/instrument/guitar";
 import type { PitchClass } from "../../core/music/types";
+import { GLOSSARY } from "../glossary";
 import { useV8Store } from "../store";
 
 export function Explore() {
@@ -33,6 +34,7 @@ export function Explore() {
         <section className="card chord-analysis"><span className="eyebrow">Harmony as moving voices</span><div className="chord-picker">{chords.map((item) => <button className={item.degree === chord.degree ? "is-active" : ""} onClick={() => setChordDegree(item.degree)} key={item.id}>{item.roman}<small>{item.symbol}</small></button>)}</div><h2>{chord.roman} · {chord.symbol}</h2><p>{chord.explanation}</p>{shape && <div className="shape-assessment"><strong>{fingering?.feasible ? "Fingering-checked voicing" : "Compact note layout"}</strong><span>{shape.fretPattern} · difficulty {fingering?.difficulty}/10</span>{fingering?.warnings.map((warning) => <small key={warning}>{warning}</small>)}</div>}<button className="secondary-action" onClick={() => playChord(chord.tones.map((tone) => tone.pitchClass))}>Hear chord structure</button></section>
       </div>
       <section className="card fretboard-explorer"><header><div><span className="eyebrow">Physical identity</span><h2>See the same relationships across the neck.</h2></div></header><Fretboard scale={scale} chord={chord} shape={shape} selectedPitch={selectedPitch} labelMode="relationships" visible="scale" onPosition={(position) => setSelectedPitch(position.pitchClass)} /></section>
+      <section className="card glossary-card"><header><div><span className="eyebrow">Plain-language reference</span><h2>Terms, in everyday words</h2><p>Every word the app uses, defined simply. Skim it once, or come back when a term trips you up.</p></div></header><dl className="glossary-list">{GLOSSARY.map((entry) => <div key={entry.term}><dt>{entry.term}</dt><dd>{entry.plain}</dd></div>)}</dl></section>
     </div>
   );
 }

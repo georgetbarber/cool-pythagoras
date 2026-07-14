@@ -43,6 +43,8 @@ function SketchEditor({ sketch }: { sketch: Sketch }) {
   const { state, dispatch } = useV8Store();
   const context = useMemo(() => createContext(sketch.key ?? state.settings.tonicName, sketch.mode ?? state.settings.mode), [sketch.key, sketch.mode, state.settings]);
   const [sevenths, setSevenths] = useState(false);
+  const [guideDismissed, setGuideDismissed] = useState(false);
+  const showGuide = !guideDismissed && sketch.chords.length === 0;
   const chords = useMemo(() => buildChords(context, sevenths), [context, sevenths]);
   const [message, setMessage] = useState("Changes save automatically on this device.");
   const sessionRef = useRef<MicrophoneSession | null>(null);
@@ -95,6 +97,7 @@ function SketchEditor({ sketch }: { sketch: Sketch }) {
         <div><span className="eyebrow">Creative workflow · {sketch.status}</span><input className="title-input" value={sketch.name} onChange={(event) => update({ name: event.target.value })} aria-label="Sketch name" /></div>
         <div className="studio-actions"><button className="secondary-action" disabled={!sketch.chords.length} onClick={play}>Play sketch</button>{recording ? <button className="primary-action" onClick={stopRecording}>Stop and compare</button> : <button className="primary-action" disabled={Boolean(pendingTake)} onClick={startRecording}>Record a temporary take</button>}</div>
       </header>
+      {showGuide && <aside className="create-guide"><div><strong>New here? Start with just this.</strong><ol><li>Give the sketch a name above.</li><li>Open “Add a chord…” below and pick two chords.</li><li>Press <b>Play sketch</b> to hear them. That's a start — everything else is optional.</li></ol></div><button className="text-action" onClick={() => setGuideDismissed(true)}>Got it, hide this</button></aside>}
       <nav className="workflow" aria-label="Composition workflow">{WORKFLOW.map((step) => <button className={sketch.status === step ? "is-active" : ""} onClick={() => update({ status: step })} key={step}>{step}</button>)}</nav>
       <section className="studio-intention card"><label>What should this music do or feel like?<textarea value={sketch.intention} onChange={(event) => update({ intention: event.target.value })} /></label><div className="studio-settings"><label>Tempo<input type="number" min="35" max="220" value={sketch.tempo} onChange={(event) => update({ tempo: Number(event.target.value) })} /></label><label>Metre<select value={sketch.metre} onChange={(event) => update({ metre: event.target.value as Sketch["metre"] })}><option>4/4</option><option>3/4</option><option>6/8</option></select></label><label>Reference key<select value={sketch.key ?? "none"} onChange={(event) => update({ key: event.target.value === "none" ? null : event.target.value })}><option value="none">No declared key</option>{["C", "D", "E", "F", "G", "A", "Bb"].map((key) => <option key={key}>{key}</option>)}</select></label></div></section>
       <div className="studio-grid">

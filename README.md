@@ -17,7 +17,9 @@ understand why the product and architecture changed.
    [development guide](docs/DEVELOPMENT.md) before changing code.
 5. Review [lessons learned](docs/LESSONS_LEARNED.md) and the
    [roadmap](docs/ROADMAP.md) before proposing a large new feature.
-6. See [additional note takeaways](docs/additional-notes/README.md) for useful
+6. Check [future features](docs/FUTURE_FEATURES.md) for the planned additions
+   and deferred work backlog.
+7. See [additional note takeaways](docs/additional-notes/README.md) for useful
    personal project thoughts that were checked against the current product.
 
 ## Run the Current App

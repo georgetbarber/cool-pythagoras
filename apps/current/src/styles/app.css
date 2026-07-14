@@ -191,6 +191,55 @@ textarea { min-height: 92px; resize: vertical; }
 .activity-kind { color: var(--coral); font-size: .65rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .activity-main > h2 { max-width: 34ch; margin-top: .65rem; }
 .activity-prompt { padding: .8rem; border-left: 3px solid var(--gold); border-radius: 0 9px 9px 0; background: color-mix(in srgb, var(--gold) 8%, var(--paper)); }
+.response-guide { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 3px solid var(--accent); background: var(--wash); }
+.response-guide strong { display: block; margin-bottom: .2rem; }
+.response-guide p { margin: 0 0 .3rem; }
+.response-guide small { color: var(--muted); }
+.do-now { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 3px solid var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--paper)); border-radius: 0 9px 9px 0; }
+.do-now strong { display: block; margin-bottom: .2rem; }
+.do-now p { margin: 0; }
+.success-criterion { margin: .3rem 0 .6rem; }
+.success-criterion small { color: var(--muted); font-size: .6rem; text-transform: uppercase; letter-spacing: .04em; }
+.success-criterion p { margin: .15rem 0 0; font-size: .8rem; font-weight: 600; }
+.outcome-lead { font-size: .66rem; color: var(--muted); margin: .4rem 0 0; }
+.help-note { display: block; margin: .4rem 0 0; color: var(--muted); font-size: .62rem; line-height: 1.4; }
+
+/* Diagnostic sound check */
+.diagnostic-soundcheck { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0 0; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--wash); }
+.diagnostic-soundcheck strong { display: block; }
+.diagnostic-soundcheck span { color: var(--muted); font-size: .72rem; }
+
+/* Micro-study notation legend */
+.tab-legend { margin-top: .6rem; font-size: .72rem; }
+.tab-legend summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.tab-legend ul { margin: .5rem 0 0; padding-left: 1.1rem; display: grid; gap: .3rem; }
+.tab-legend li { color: var(--muted); line-height: 1.45; }
+
+/* Audio playback feedback */
+.audio-feedback { display: flex; align-items: center; gap: .55rem; margin: .6rem 0 0; padding: .6rem .8rem; border-radius: 10px; background: var(--wash); border: 1px solid var(--line); }
+.audio-feedback p { margin: 0; font-size: .72rem; color: var(--muted); }
+.audio-dot { font-size: 1rem; opacity: .35; transition: opacity .2s; }
+.audio-feedback.is-playing { border-color: var(--accent); }
+.audio-feedback.is-playing .audio-dot { opacity: 1; animation: audio-pulse 0.6s ease-in-out infinite; }
+.audio-feedback.is-playing p { color: var(--ink, inherit); }
+@keyframes audio-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+
+/* Mastery next-threshold hint */
+.mastery-next { display: block; margin-top: .25rem; color: var(--accent); font-size: .62rem; line-height: 1.4; }
+
+/* Path locked units */
+.unit-card.is-locked { opacity: .62; }
+.unit-card .lock-note { display: block; margin-top: .35rem; color: var(--muted); font-size: .62rem; }
+
+/* Create first-run guide */
+.create-guide { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin: 0 0 .8rem; padding: .8rem 1rem; border-left: 3px solid var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--paper)); border-radius: 0 10px 10px 0; }
+.create-guide ol { margin: .35rem 0 0; padding-left: 1.1rem; display: grid; gap: .25rem; font-size: .78rem; }
+
+/* Glossary */
+.glossary-list { display: grid; gap: .7rem; margin: 0; }
+.glossary-list div { display: grid; gap: .15rem; }
+.glossary-list dt { font-weight: 600; }
+.glossary-list dd { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.45; }
 .micro-study { display: grid; grid-template-columns: 210px 1fr; gap: .75rem; margin: 1rem 0; padding: .8rem; border-radius: 14px; background: var(--night); color: #f3f5f1; }
 .micro-study figcaption { display: grid; align-content: center; gap: .25rem; }
 .micro-study figcaption span, .micro-study figcaption small { color: #91a69d; font-size: .63rem; }

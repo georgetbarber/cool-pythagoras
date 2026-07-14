@@ -42,6 +42,41 @@ export function masteryFor(competencyId: string, evidence: CompetencyEvidence[])
   };
 }
 
+export function masteryNextStep(summary: MasterySummary): string {
+  switch (summary.state) {
+    case "transfer-ready":
+      return "Secure across contexts — keep transferring it to new music.";
+    case "secure":
+      return summary.contextCount < 2
+        ? "Play it in a new key or tempo, then do a transfer task, to reach Transfer-ready."
+        : "Do a transfer task (new key, region or tempo) to reach Transfer-ready.";
+    case "practising": {
+      const daysLeft = Math.max(1, 2 - summary.successfulDays);
+      return `${daysLeft} more independent success day${daysLeft === 1 ? "" : "s"} (no hint or reveal) to reach Secure.`;
+    }
+    default:
+      return "Complete it independently once to start building evidence.";
+  }
+}
+
+// Weakest-link ranking: prefer activities whose competency shows the least independent
+// mastery and the most retries, so "recommended next" reflects real evidence, not just order.
+export function recommendPractice(activities: typeof ACTIVITIES, state: V8State): typeof ACTIVITIES[number] | undefined {
+  if (!activities.length) return undefined;
+  const stateRank: Record<string, number> = { introduced: 0, practising: 1, secure: 2, "transfer-ready": 3 };
+  const retriesFor = (competencyId: string) =>
+    state.evidence.filter((item) => item.competencyId === competencyId && item.outcome !== "successful").length;
+  const weakness = (activity: typeof ACTIVITIES[number]) => {
+    const summaries = activity.competencyIds.map((id) => masteryFor(id, state.evidence));
+    const minMastery = Math.min(...summaries.map((summary) => stateRank[summary.state] ?? 0));
+    const retries = activity.competencyIds.reduce((sum, id) => sum + retriesFor(id), 0);
+    const done = state.completedActivityIds.includes(activity.id) ? 1 : 0;
+    // Lower is more urgent: unfinished first, then least mastery, then most retries.
+    return done * 100 + minMastery * 10 - Math.min(retries, 9);
+  };
+  return [...activities].sort((a, b) => weakness(a) - weakness(b))[0];
+}
+
 export function unitProgress(state: V8State, unitId: string): number {
   const unit = unitById(unitId);
   const completed = unit.activities.filter((activity) => state.completedActivityIds.includes(activity.id)).length;
@@ -66,7 +101,7 @@ export function buildSession(state: V8State, now = new Date()): SessionPlan {
   const selections: Array<[ReturnType<typeof choose>, number]> = [
     [choose(["listen-compare", "sing-predict"], 0), 3],
     [choose(["technique", "rhythm"], 2), 5],
-    [choose(["relationship", "play-reveal"], 4), 6],
+    [choose(["relationship"], 4), 6],
     [choose(["variation", "transfer"], 5), 6],
     [choose(["creative", "reflection"], 6), 5]
   ];

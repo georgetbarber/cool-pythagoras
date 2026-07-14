@@ -53,6 +53,7 @@ export interface ActivityDefinition {
   minutes: number;
   competencyIds: string[];
   source: EvidenceSource;
+  action: string;
   observable: string;
   prompt: string;
   hint?: string;

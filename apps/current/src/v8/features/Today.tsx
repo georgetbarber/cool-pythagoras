@@ -7,7 +7,9 @@ export function Today() {
   const unit = nextUnit(state);
   const summary = pathSummary(state);
   const currentProject = state.sketches.find((sketch) => sketch.id === state.activeSketchId) ?? state.sketches.at(-1);
-  const first = session.items.find((item) => !state.completedActivityIds.includes(item.activityId)) ?? session.items[0];
+  const firstUnfinished = session.items.find((item) => !state.completedActivityIds.includes(item.activityId));
+  const first = firstUnfinished ?? session.items[0];
+  const sessionComplete = !firstUnfinished;
   return (
     <div className="page-stack today-page">
       <section className="today-focus">
@@ -16,7 +18,9 @@ export function Today() {
           <h1>Turn one relationship into music.</h1>
           <p>{session.purpose}</p>
           <div className="today-meta"><span>{unit.title}</span><span>{state.settings.instrument}</span><span>{state.settings.tonicName} {state.settings.mode}</span></div>
-          <button className="primary-action large" onClick={() => dispatch({ type: "openActivity", activityId: first.activityId })}>Start with: {first.title}</button>
+          {sessionComplete
+            ? <button className="primary-action large" onClick={() => navigate("path")}>Today’s session is complete — explore your Path</button>
+            : <button className="primary-action large" onClick={() => dispatch({ type: "openActivity", activityId: first.activityId })}>Start with: {first.title}</button>}
         </div>
         <div className="session-ring" aria-label={`${unitProgress(state, unit.id)} percent of unit complete`}><strong>{unitProgress(state, unit.id)}%</strong><span>unit complete</span></div>
       </section>
