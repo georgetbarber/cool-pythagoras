@@ -38,9 +38,9 @@ Open [http://localhost:4184](http://localhost:4184), or double-click
 ## Publish GitHub, Web, and Mobile
 
 Double-click `PUBLISH_LIVE.command` at the repository root. It shows the complete
-change list, verifies the current app, and pushes `main` to GitHub. GitHub Actions
-then deploys the Firebase-hosted PWA used by the web and installed mobile versions.
-See the
+change list, verifies the current app, keeps Firebase sync configured, pushes
+`main` to GitHub, and waits for the live deployment to finish. The web and
+installed mobile versions then update automatically. See the
 [publishing guide](docs/PUBLISHING.md) for first-run authentication and recovery.
 
 ## Repository Map

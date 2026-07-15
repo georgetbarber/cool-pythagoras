@@ -99,11 +99,36 @@ test("handles denied microphone access without losing a sketch", async ({ page, 
 test("exports a complete local backup", async ({ page }) => {
   await completeDiagnostic(page);
   await page.getByRole("button", { name: /settings and (?:data|sync)/i }).filter({ visible: true }).click();
+  await expect(page.getByRole("heading", { name: "Install Guitar Academy" })).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export complete backup" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/\.guitar-academy$/);
   await expect(page.getByText(/Audio is never uploaded or synchronised/)).toBeVisible();
+});
+
+test("gives reinstall guidance without claiming a surviving app window is installed", async ({ page }) => {
+  await page.addInitScript(() => {
+    const browserMatchMedia = window.matchMedia.bind(window);
+    window.matchMedia = (query: string) => {
+      if (query !== "(display-mode: standalone)") return browserMatchMedia(query);
+      return {
+        matches: true,
+        media: query,
+        onchange: null,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        dispatchEvent: () => false
+      } as MediaQueryList;
+    };
+  });
+  await completeDiagnostic(page);
+  await page.getByRole("button", { name: /settings and (?:data|sync)/i }).filter({ visible: true }).click();
+  await expect(page.getByRole("heading", { name: "Opened in app mode" })).toBeVisible();
+  await expect(page.getByText(/If you removed the installation while this window was open/)).toBeVisible();
+  await expect(page.getByText("Installed on this device", { exact: true })).toHaveCount(0);
 });
 
 test("keeps content first and avoids horizontal page overflow on a phone", async ({ page }) => {

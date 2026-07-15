@@ -7,6 +7,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$ROOT/apps/current"
 BRANCH="$(git -C "$ROOT" branch --show-current)"
 REMOTE_URL="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
+LIVE_URL="https://learn-the-guitar.web.app"
+REQUIRED_FIREBASE_VARIABLES=(
+  VITE_FIREBASE_API_KEY
+  VITE_FIREBASE_AUTH_DOMAIN
+  VITE_FIREBASE_PROJECT_ID
+  VITE_FIREBASE_STORAGE_BUCKET
+  VITE_FIREBASE_MESSAGING_SENDER_ID
+  VITE_FIREBASE_APP_ID
+)
 
 fail() {
   echo
@@ -19,6 +28,7 @@ echo "========================"
 echo
 
 command -v git >/dev/null 2>&1 || fail "Git is not installed."
+command -v gh >/dev/null 2>&1 || fail "GitHub CLI is not installed."
 command -v npm >/dev/null 2>&1 || fail "Node.js and npm are not installed."
 [ -d "$APP" ] || fail "apps/current could not be found."
 [ "$BRANCH" = "main" ] || fail "the current Git branch is '$BRANCH'. Switch to main before publishing."
@@ -30,7 +40,7 @@ if [ -n "$(git -C "$ROOT" diff --name-only --diff-filter=U)" ]; then
 fi
 
 echo "GitHub: $REMOTE_URL"
-echo "Live app: https://learn-the-guitar.web.app"
+echo "Live app: $LIVE_URL"
 echo
 echo "The following repository changes will be included:"
 echo
@@ -41,11 +51,21 @@ else
 fi
 echo
 echo "This will verify the app, commit every change shown above, push main to GitHub,"
-echo "and let GitHub Actions deploy Firebase Hosting automatically."
+echo "deploy Firebase Hosting, and wait until the live update is complete."
 echo
 printf "Type PUBLISH to continue: "
 read -r confirmation
 [ "$confirmation" = "PUBLISH" ] || fail "confirmation was not entered."
+
+echo
+echo "Checking GitHub sign-in..."
+if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+  echo "GitHub needs you to sign in. Your browser will open once."
+  gh auth login --hostname github.com --web --git-protocol https
+fi
+
+REPOSITORY="$(cd "$ROOT" && gh repo view --json nameWithOwner --jq '.nameWithOwner')"
+[ -n "$REPOSITORY" ] || fail "the GitHub repository could not be identified."
 
 echo
 echo "Checking GitHub for newer work..."
@@ -64,6 +84,24 @@ echo
 echo "Running music, application, and production checks..."
 (cd "$APP" && npm run test && npm run build)
 
+echo
+echo "Keeping Firebase cloud sync configured..."
+for name in "${REQUIRED_FIREBASE_VARIABLES[@]}"; do
+  value="$(awk -F= -v target="$name" '
+    $1 == target {
+      value = substr($0, index($0, "=") + 1)
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      print value
+      exit
+    }
+  ' "$APP/.env.local")"
+  [ -n "$value" ] || fail "$name is missing from apps/current/.env.local."
+  print -rn -- "$value" | gh variable set "$name" --repo "$REPOSITORY"
+done
+echo "Firebase cloud sync settings are ready."
+
+created_release=0
 if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
   git -C "$ROOT" add -A
   git -C "$ROOT" diff --cached --check
@@ -72,6 +110,7 @@ if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
   git -C "$ROOT" diff --cached --stat
   commit_message="Publish Guitar Academy $(date '+%Y-%m-%d %H:%M')"
   git -C "$ROOT" commit -m "$commit_message"
+  created_release=1
 else
   echo
   echo "No new commit is needed."
@@ -82,9 +121,39 @@ echo "Pushing main to GitHub..."
 git -C "$ROOT" push origin main
 
 echo
-echo "GitHub has received the release. GitHub Actions is now testing and deploying"
-echo "the live site: https://github.com/georgetbarber/cool-pythagoras/actions"
-echo "When that run finishes successfully, the live app is updated at:"
-echo "https://learn-the-guitar.web.app"
-echo "The installed mobile app updates from the same deployment. If it is already open,"
-echo "close and reopen it once the service worker has downloaded the new version."
+echo "GitHub has received the release. Waiting for Firebase Hosting..."
+commit_sha="$(git -C "$ROOT" rev-parse HEAD)"
+previous_run_id=""
+if [ "$created_release" -eq 0 ]; then
+  previous_run_id="$(gh run list \
+    --repo "$REPOSITORY" \
+    --workflow firebase-hosting-merge.yml \
+    --branch main \
+    --limit 1 \
+    --json databaseId \
+    --jq '.[0].databaseId // empty')"
+  gh workflow run firebase-hosting-merge.yml --repo "$REPOSITORY" --ref main
+fi
+run_id=""
+for attempt in {1..20}; do
+  candidate_run_id="$(gh run list \
+    --repo "$REPOSITORY" \
+    --workflow firebase-hosting-merge.yml \
+    --commit "$commit_sha" \
+    --limit 1 \
+    --json databaseId \
+    --jq '.[0].databaseId // empty')"
+  if [ -n "$candidate_run_id" ] && [ "$candidate_run_id" != "$previous_run_id" ]; then
+    run_id="$candidate_run_id"
+  fi
+  [ -n "$run_id" ] && break
+  sleep 3
+done
+[ -n "$run_id" ] || fail "GitHub did not start the Firebase deployment. Check https://github.com/$REPOSITORY/actions."
+
+gh run watch "$run_id" --repo "$REPOSITORY" --exit-status
+
+echo
+echo "Published successfully: $LIVE_URL"
+echo "Your phone will download the new version automatically. If the app was already"
+echo "open, bring it to the foreground; it will reload when the update is ready."
