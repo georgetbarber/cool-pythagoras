@@ -98,7 +98,7 @@ export function Play() {
           {(Object.keys(FREE_PLAY_MODE_INFO) as FreePlayMode[]).map((mode) => {
             const info = FREE_PLAY_MODE_INFO[mode];
             const ready = availableModes.includes(mode);
-            return <article className={`play-mode-card mode-${mode} ${ready ? "is-ready" : "is-locked"}`} key={mode}><span className="mode-icon">{MODE_ICONS[mode]}</span><div><small>{ready ? "Ready now" : info.unlock}</small><h3>{info.label}</h3><p>{info.invitation}</p></div><button className={ready ? "secondary-action" : "text-action"} disabled={!ready} onClick={() => start(mode)}>{ready ? `Play ${info.label}` : "Build this relationship on Path"}</button></article>;
+            return <article className={`play-mode-card mode-${mode} ${ready ? "is-ready" : "is-locked"}`} key={mode}><span className="mode-icon">{MODE_ICONS[mode]}</span><div><small>{ready ? "Ready now" : info.unlock}</small><h3>{info.label}</h3><p>{info.invitation}</p></div><button className={ready ? "secondary-action" : "text-action"} disabled={!ready} onClick={() => start(mode)}>{ready ? `Play ${info.label}` : "Build this relationship in Learn"}</button></article>;
           })}
         </div>
       </section>
@@ -106,7 +106,7 @@ export function Play() {
       <section className="play-promise card">
         <div><span>01</span><strong>One action appears</strong><p>The key, tempo and difficulty come from your learning history.</p></div>
         <div><span>02</span><strong>Hear, play or reveal</strong><p>Use an audio guide or physical cue only when it helps.</p></div>
-        <div><span>03</span><strong>Keep flowing</strong><p>Skip freely. These prompts create no score and never gate the Path.</p></div>
+        <div><span>03</span><strong>Keep flowing</strong><p>Skip freely. These prompts create no score and never gate the Course map.</p></div>
       </section>
     </div>
   );

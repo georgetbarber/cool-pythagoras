@@ -15,6 +15,10 @@ function learningNav(page: Page) {
   return page.locator(".primary-sidebar nav:visible, .mobile-nav:visible");
 }
 
+function learnViews(page: Page) {
+  return page.getByRole("navigation", { name: "Learn views" });
+}
+
 test("first launch explains the learning contract before entering the app", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Build freedom from sound, time and relationships." })).toBeVisible();
@@ -27,15 +31,46 @@ test("first launch explains the learning contract before entering the app", asyn
   await expect(page.getByText("acoustic", { exact: true }).first()).toBeVisible();
 });
 
-test("navigates six focused destinations with real URL history", async ({ page }) => {
+test("navigates four distinct destinations and three nested Learn views with real URL history", async ({ page }) => {
   await completeDiagnostic(page);
   const nav = learningNav(page);
-  for (const [label, path] of [["Path", "/path"], ["Practice", "/practice"], ["Play", "/play"], ["Create", "/create"], ["Explore", "/explore"], ["Today", "/today"]]) {
+  await expect(nav.getByRole("button")).toHaveCount(4);
+  for (const [label, path] of [["Course map", "/learn/course"], ["Strengthen", "/learn/strengthen"], ["Continue", "/learn"]]) {
+    await learnViews(page).getByRole("button", { name: new RegExp(label) }).click();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+  }
+  for (const [label, path] of [["Play", "/play"], ["Create", "/create"], ["Explore", "/explore"], ["Learn", "/learn"]]) {
     await nav.getByRole("button", { name: new RegExp(label) }).click();
     await expect(page).toHaveURL(new RegExp(`${path}$`));
   }
   await page.goBack();
   await expect(page).toHaveURL(/\/explore$/);
+});
+
+test("migrates legacy learning URLs into the canonical Learn structure", async ({ page }) => {
+  await completeDiagnostic(page);
+  for (const [legacy, canonical] of [["/today", "/learn"], ["/path", "/learn/course"], ["/practice", "/learn/strengthen"]]) {
+    await page.goto(legacy);
+    await expect(page).toHaveURL(new RegExp(`${canonical}$`));
+  }
+});
+
+test("makes the course hierarchy explicit and keeps later activity detail folded away", async ({ page }) => {
+  await completeDiagnostic(page);
+  const location = page.locator('[aria-label="Current course location"]');
+  await expect(location).toContainText("Stage 1 of 8");
+  await expect(location).toContainText("Current unit · 1 of 6");
+  await expect(location).toContainText("Your musical baseline");
+
+  await learnViews(page).getByRole("button", { name: /Course map/ }).click();
+  await expect(page.locator(".stage-list > button").first()).toContainText("Stage 1");
+  await expect(page.locator(".unit-card").first().locator(".unit-status")).toContainText("Current");
+  await expect(page.locator(".activity-list li").first().locator("button > span")).toHaveText("Listen");
+
+  await page.locator(".stage-list > button").nth(2).click();
+  await expect(page.getByText("Preview only", { exact: true })).toBeVisible();
+  await expect(page.locator(".activity-list li")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Return to current unit" })).toBeVisible();
 });
 
 test("runs an ability-matched prompted free-play flow without scoring it", async ({ page }) => {
@@ -44,7 +79,7 @@ test("runs an ability-matched prompted free-play flow without scoring it", async
   await expect(page.getByRole("heading", { name: "Put the guitar in your hands." })).toBeVisible();
   await expect(page.getByRole("button", { name: "Play Groove keeper" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Play Riff echo" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Build this relationship on Path" }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Build this relationship in Learn" }).first()).toBeDisabled();
   await page.getByRole("button", { name: "Start a mixed flow" }).click();
   await expect(page.getByText("Your one instruction")).toBeVisible();
   await expect(page.getByText(/There is no right response to submit/)).toBeVisible();
@@ -65,22 +100,38 @@ test("keeps local learning and Free Play available when the connection drops", a
   await context.setOffline(false);
 });
 
+test("waits for real learning evidence before suggesting Strengthen work", async ({ page }) => {
+  await completeDiagnostic(page);
+  await learnViews(page).getByRole("button", { name: /Strengthen/ }).click();
+  await expect(page.getByRole("heading", { name: "Nothing to strengthen yet." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Go to Continue" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Skill focuses" })).toHaveCount(0);
+});
+
 test("records hints separately from independent learning evidence", async ({ page }) => {
   await completeDiagnostic(page);
   await page.getByRole("button", { name: /Start with:/ }).click();
+  await expect(page.locator(".activity-header > div > span")).toContainText("Guided session");
   await page.getByRole("button", { name: "Use a hint" }).click();
   await page.getByRole("button", { name: /Hear (?:reference and target|the tonic reference)/ }).click();
   await page.getByRole("button", { name: "Successful today" }).click();
   await page.getByRole("button", { name: "Stop here for now" }).click();
-  const nav = learningNav(page);
-  await nav.getByRole("button", { name: /Practice/ }).click();
+  await learnViews(page).getByRole("button", { name: /Strengthen/ }).click();
+  await expect(page.getByRole("region", { name: "Skill focuses" }).getByRole("button")).toHaveCount(8);
+  await expect(page.locator(".recommendation-reason")).toContainText("assisted attempt");
+  await expect(page.locator(".recommendation-context")).toContainText("Stage 1");
   await expect(page.getByText(/assisted attempt.*kept separate/).first()).toBeVisible();
   await expect(page.getByText("secure", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Start strengthening" }).click();
+  await expect(page.locator(".activity-header > div > span")).toContainText("Strengthen");
+  await page.getByRole("button", { name: "Close activity" }).click();
+  await page.getByRole("button", { name: /Ear to hand/ }).click();
+  await expect(page.getByRole("heading", { name: "Meet this skill in Continue first." })).toBeVisible();
 });
 
 test("exposes all eight stages and a complete unit activity contract", async ({ page }) => {
   await completeDiagnostic(page);
-  await learningNav(page).getByRole("button", { name: /Path/ }).click();
+  await learnViews(page).getByRole("button", { name: /Course map/ }).click();
   await expect(page.getByRole("navigation", { name: "Curriculum stages" }).getByRole("button")).toHaveCount(8);
   await expect(page.locator(".unit-card")).toHaveCount(6);
   await expect(page.locator(".activity-list li")).toHaveCount(9);
@@ -163,6 +214,7 @@ test("keeps content first and avoids horizontal page overflow on a phone", async
   await page.setViewportSize({ width: 390, height: 844 });
   await completeDiagnostic(page);
   await expect(page.getByRole("navigation", { name: "Mobile learning navigation" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Mobile learning navigation" }).getByRole("button")).toHaveCount(4);
   await expect(page.getByRole("navigation", { name: "Primary learning navigation" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Turn one relationship into music." })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

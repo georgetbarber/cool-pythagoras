@@ -195,6 +195,7 @@ export interface V8State {
   route: RouteId;
   activeUnitId: string;
   activeActivityId: string | null;
+  activityOrigin?: RouteId | null;
   resumeActivityId: string | null;
   completedActivityIds: string[];
   evidence: CompetencyEvidence[];

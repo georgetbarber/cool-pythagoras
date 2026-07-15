@@ -41,6 +41,13 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
   const [justCompleted, setJustCompleted] = useState<EvidenceOutcome | null>(null);
   const unit = useMemo(() => unitById(activity?.unitId ?? state.activeUnitId), [activity?.unitId, state.activeUnitId]);
   if (!activity) return null;
+  const originLabel = state.activityOrigin === "practice" ? "Strengthen"
+    : state.activityOrigin === "path" ? "Course map"
+      : state.activityOrigin === "today" ? "Guided session"
+        : state.activityOrigin === "create" ? "Create"
+          : state.activityOrigin === "play" ? "Play"
+            : state.activityOrigin === "explore" ? "Explore"
+              : "Learn";
 
   const targets = unit.microStudy.earTargets ?? [0];
   const hear = (harmonic = false) => {
@@ -111,7 +118,7 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
       <section className="activity-player activity-done" aria-labelledby="activity-title">
         <header className="activity-header">
           <button className="icon-button" onClick={onClose} aria-label="Close activity">←</button>
-          <div><span>{unit.title}</span><h1 id="activity-title">Logged: {activity.title}</h1><p>Recorded as “{outcomeLabel}”. Progress is built from real attempts, so this counts.</p></div>
+          <div><span>{originLabel} · {unit.title}</span><h1 id="activity-title">Logged: {activity.title}</h1><p>Recorded as “{outcomeLabel}”. Progress is built from real attempts, so this counts.</p></div>
         </header>
         <div className="done-panel card">
           <span className="done-check" aria-hidden="true">✓</span>
@@ -138,7 +145,7 @@ export function ActivityPlayer({ activityId, onClose }: { activityId: string; on
     <section className="activity-player" aria-labelledby="activity-title">
       <header className="activity-header">
         <button className="icon-button" onClick={onClose} aria-label="Close activity">←</button>
-        <div><span>{unit.title} · {activity.minutes} minutes</span><h1 id="activity-title">{activity.title}</h1><p>{activity.why}</p></div>
+        <div><span>{originLabel} · {unit.title} · {activity.minutes} minutes</span><h1 id="activity-title">{activity.title}</h1><p>{activity.why}</p></div>
       </header>
 
       <div className="activity-grid">

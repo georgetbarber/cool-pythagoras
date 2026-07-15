@@ -8,8 +8,9 @@ durable.
 
 V8 therefore preserves those validated domains while replacing the product shell:
 
-- one Today recommendation and a competency-paced Path;
-- targeted Practice and contextual Explore tools;
+- one Learn destination containing Continue, Course map and an evidence-led
+  Strengthen view restricted to encountered skills and course material;
+- prompted Play and contextual Explore tools;
 - a persistent Create workflow for original music;
 - typed activities and context-rich evidence;
 - History API routes and exact interruption recovery;

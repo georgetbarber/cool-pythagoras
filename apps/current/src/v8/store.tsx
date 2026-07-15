@@ -7,6 +7,14 @@ import { SKETCH_SYNC_FIELDS } from "./types";
 import type { CompetencyEvidence, LearnerSettings, RecordedTake, RouteId, Sketch, V8State } from "./types";
 
 const ROUTES: RouteId[] = ["today", "path", "practice", "play", "create", "explore"];
+const ROUTE_PATHS: Record<RouteId, string> = {
+  today: "/learn",
+  path: "/learn/course",
+  practice: "/learn/strengthen",
+  play: "/play",
+  create: "/create",
+  explore: "/explore"
+};
 const BASELINE_UNITS: Record<LearnerSettings["startingBaseline"], string> = {
   repair: "unit-01",
   some: "unit-03",
@@ -14,8 +22,20 @@ const BASELINE_UNITS: Record<LearnerSettings["startingBaseline"], string> = {
 };
 
 function routeFromLocation(): RouteId {
-  const candidate = location.pathname.split("/").filter(Boolean)[0] as RouteId | undefined;
+  const segments = location.pathname.split("/").filter(Boolean);
+  if (segments[0] === "learn") {
+    if (segments[1] === "course") return "path";
+    if (segments[1] === "strengthen") return "practice";
+    return "today";
+  }
+  const candidate = segments[0] as RouteId | undefined;
   return candidate && ROUTES.includes(candidate) ? candidate : "today";
+}
+
+function replaceLegacyLocation(route: RouteId) {
+  const canonical = ROUTE_PATHS[route];
+  if (location.pathname === canonical) return;
+  history.replaceState(history.state, "", `${canonical}${location.search}${location.hash}`);
 }
 
 export const DEFAULT_STATE: V8State = {
@@ -26,6 +46,7 @@ export const DEFAULT_STATE: V8State = {
   route: typeof location === "undefined" ? "today" : routeFromLocation(),
   activeUnitId: CURRICULUM[0].id,
   activeActivityId: null,
+  activityOrigin: null,
   resumeActivityId: null,
   completedActivityIds: [],
   evidence: [],
@@ -72,7 +93,11 @@ function reducer(state: V8State, action: Action): V8State {
     case "mergeCloud": return withSketchFieldTimes(mergeCloudSnapshot(state, action.snapshot));
     case "navigate": return { ...state, route: action.route, activeActivityId: null };
     case "openUnit": return { ...state, route: "path", activeUnitId: action.unitId, activeActivityId: null, updatedAt: changedAt };
-    case "openActivity": return { ...state, activeActivityId: action.activityId };
+    case "openActivity": return {
+      ...state,
+      activeActivityId: action.activityId,
+      activityOrigin: action.activityId ? (state.activeActivityId ? state.activityOrigin ?? state.route : state.route) : null
+    };
     case "suspendActivity": return { ...state, route: action.route, resumeActivityId: state.activeActivityId, activeActivityId: null };
     case "resumeActivity": return { ...state, activeActivityId: state.resumeActivityId, resumeActivityId: null };
     case "recordActivity": return {
@@ -155,7 +180,12 @@ export function V8StoreProvider({ children }: { children: React.ReactNode }) {
     void savePersistedState(state).catch(() => undefined);
   }, [state, hydrated]);
   useEffect(() => {
-    const listener = () => dispatch({ type: "navigate", route: routeFromLocation() });
+    replaceLegacyLocation(routeFromLocation());
+    const listener = () => {
+      const route = routeFromLocation();
+      replaceLegacyLocation(route);
+      dispatch({ type: "navigate", route });
+    };
     addEventListener("popstate", listener);
     return () => removeEventListener("popstate", listener);
   }, []);
@@ -167,7 +197,7 @@ export function useV8Store() {
   const value = useContext(Store);
   if (!value) throw new Error("useV8Store must be used inside V8StoreProvider");
   const navigate = (route: RouteId) => {
-    history.pushState({}, "", `/${route}`);
+    history.pushState({}, "", ROUTE_PATHS[route]);
     value.dispatch({ type: "navigate", route });
   };
   return { ...value, navigate };

@@ -7,7 +7,7 @@ import { transformMotif } from "../core/music/motif";
 import { transformRhythm, validateRhythm } from "../core/music/rhythm";
 import { CURRICULUM, validateCurriculum } from "./curriculum";
 import { DEFAULT_STATE } from "./store";
-import { buildSession, createEvidence, masteryFor } from "./learning";
+import { buildSession, createEvidence, masteryFor, recommendPractice, recommendedPracticeStrand } from "./learning";
 import { availableFreePlayModes, buildFreePlaySequence, freePlayAbilityLevel } from "./freePlay";
 import { cloudProfile, cloudSketch, mergeCloudSnapshot } from "./sync";
 
@@ -51,6 +51,23 @@ describe("V8 musical-freedom foundations", () => {
     expect(masteryFor("ear:u1", [...first, ...assisted]).state).toBe("practising");
     const transfer = createEvidence("c", ["ear:u1"], "transfer", "none", "successful", { ...context, key: "D" }, "2026-07-12T10:00:00Z");
     expect(masteryFor("ear:u1", [...first, ...assisted, ...transfer]).state).toBe("transfer-ready");
+  });
+
+  it("chooses a Strengthen focus and activity from the selected skill evidence", () => {
+    const evidenceState = {
+      ...DEFAULT_STATE,
+      evidence: [
+        ...createEvidence("sound-baseline", ["sound:unit-01"], "performance", "none", "successful", {}, "2026-07-09T10:00:00Z"),
+        ...createEvidence("sound-1", ["sound:unit-02"], "performance", "none", "retry", {}, "2026-07-10T10:00:00Z"),
+        ...createEvidence("sound-2", ["sound:unit-02"], "performance", "none", "partial", {}, "2026-07-11T10:00:00Z"),
+        ...createEvidence("rhythm-1", ["rhythm:unit-01"], "performance", "none", "successful", {}, "2026-07-10T10:00:00Z")
+      ]
+    };
+    expect(recommendedPracticeStrand(evidenceState)).toBe("sound");
+
+    const unitOne = CURRICULUM[0].activities.find((activity) => activity.kind === "technique")!;
+    const unitTwo = CURRICULUM[1].activities.find((activity) => activity.kind === "technique")!;
+    expect(recommendPractice([unitOne, unitTwo], evidenceState, ["sound"])?.unitId).toBe("unit-02");
   });
 
   it("describes chromatic pitches as relationships rather than errors", () => {

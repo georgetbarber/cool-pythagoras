@@ -2,6 +2,9 @@
 set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+# Publishing is an automated flow: Git output must print and continue rather
+# than opening an interactive `less` screen that waits for the user to press q.
+export GIT_PAGER=cat
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$ROOT/apps/current"
@@ -107,7 +110,7 @@ if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
   git -C "$ROOT" diff --cached --check
   echo
   echo "Creating the release commit..."
-  git -C "$ROOT" diff --cached --stat
+  git -C "$ROOT" --no-pager diff --cached --stat
   commit_message="Publish Guitar Academy $(date '+%Y-%m-%d %H:%M')"
   git -C "$ROOT" commit -m "$commit_message"
   created_release=1

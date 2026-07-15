@@ -6,9 +6,13 @@ find it on the instrument, vary it deliberately, and turn it into original music
 
 ## Product shape
 
-- **Today** presents one balanced 25-minute session.
-- **Path** contains 48 competency-paced units across eight connected stages.
-- **Practice** targets sound, rhythm, ear, fretboard, phrasing and creative work.
+- **Learn** groups three related views: **Continue** presents the next balanced
+  25-minute session, **Course map** locates it within 48 units across eight
+  stages, and **Strengthen** offers focused review from learning evidence.
+  Continue names the current stage and unit; Course map uses status labels and
+  keeps the activity detail for later units folded away until it is available.
+  Strengthen stays empty until real attempts exist, then recommends only
+  encountered skills and explains the evidence behind each suggestion.
 - **Play** runs ability-matched, one-prompt-at-a-time groove, riff, degree and
   chord flows with no score or planning load.
 - **Create** stores sketches, exact voicings, revisions and recorded takes locally.

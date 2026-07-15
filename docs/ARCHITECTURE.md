@@ -24,9 +24,11 @@ IndexedDB repositories       curriculum + activity definitions
           browser audio and recording adapters
 ```
 
-The shell has six destinations: Today, Path, Practice, Play, Create, and Explore.
-History API routes are durable UI state; an activity can open a tool and return
-to its exact attempt, assistance, reflection, and timing state.
+The shell has four primary destinations: Learn, Play, Create, and Explore. Learn
+contains three related views with canonical URLs: Continue (`/learn`), Course map
+(`/learn/course`), and Strengthen (`/learn/strengthen`). Legacy Today, Path, and
+Practice URLs migrate to those views. An activity can open a tool and return to
+its exact attempt, assistance, reflection, and timing state.
 
 ## Source Ownership
 
@@ -39,7 +41,7 @@ src/
     repository.ts  IndexedDB, fallback storage, blobs, archive export/import
     store.tsx       Versioned product state, commands, routing, persistence
     components/     Activity player, micro-study, rhythm notation, settings
-    features/       Today, Path, Practice, Play, Create, Explore
+    features/       Learn views (Today, Path, Practice), Play, Create, Explore
   core/
     music/          Theory, rhythm, motif, and chromatic descriptions
     instrument/     Fretboard geometry, shapes, transitions, fingering feasibility

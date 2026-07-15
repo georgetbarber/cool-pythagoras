@@ -1,6 +1,8 @@
 import { ACTIVITIES, CURRICULUM, activityById, unitById } from "./curriculum";
+import { COMPETENCY_STRANDS } from "./types";
 import type {
   Assistance,
+  CompetencyStrand,
   CompetencyEvidence,
   EvidenceContext,
   EvidenceOutcome,
@@ -61,20 +63,35 @@ export function masteryNextStep(summary: MasterySummary): string {
 
 // Weakest-link ranking: prefer activities whose competency shows the least independent
 // mastery and the most retries, so "recommended next" reflects real evidence, not just order.
-export function recommendPractice(activities: typeof ACTIVITIES, state: V8State): typeof ACTIVITIES[number] | undefined {
+export function recommendPractice(activities: typeof ACTIVITIES, state: V8State, focusStrands: readonly CompetencyStrand[] = []): typeof ACTIVITIES[number] | undefined {
   if (!activities.length) return undefined;
   const stateRank: Record<string, number> = { introduced: 0, practising: 1, secure: 2, "transfer-ready": 3 };
   const retriesFor = (competencyId: string) =>
     state.evidence.filter((item) => item.competencyId === competencyId && item.outcome !== "successful").length;
   const weakness = (activity: typeof ACTIVITIES[number]) => {
-    const summaries = activity.competencyIds.map((id) => masteryFor(id, state.evidence));
+    const focusedIds = focusStrands.length
+      ? activity.competencyIds.filter((id) => focusStrands.some((strand) => id.startsWith(`${strand}:`)))
+      : activity.competencyIds;
+    const summaries = (focusedIds.length ? focusedIds : activity.competencyIds).map((id) => masteryFor(id, state.evidence));
     const minMastery = Math.min(...summaries.map((summary) => stateRank[summary.state] ?? 0));
-    const retries = activity.competencyIds.reduce((sum, id) => sum + retriesFor(id), 0);
+    const retries = (focusedIds.length ? focusedIds : activity.competencyIds).reduce((sum, id) => sum + retriesFor(id), 0);
     const done = state.completedActivityIds.includes(activity.id) ? 1 : 0;
     // Lower is more urgent: unfinished first, then least mastery, then most retries.
     return done * 100 + minMastery * 10 - Math.min(retries, 9);
   };
   return [...activities].sort((a, b) => weakness(a) - weakness(b))[0];
+}
+
+export function recommendedPracticeStrand(state: V8State): CompetencyStrand | undefined {
+  const stateRank: Record<string, number> = { introduced: 0, practising: 1, secure: 2, "transfer-ready": 3 };
+  const candidates = COMPETENCY_STRANDS.flatMap((strand, index) => {
+    const competencyIds = [...new Set(state.evidence.filter((item) => item.competencyId.startsWith(`${strand}:`)).map((item) => item.competencyId))];
+    if (!competencyIds.length) return [];
+    const minMastery = Math.min(...competencyIds.map((id) => stateRank[masteryFor(id, state.evidence).state] ?? 0));
+    const retries = state.evidence.filter((item) => item.competencyId.startsWith(`${strand}:`) && item.outcome !== "successful").length;
+    return [{ strand, index, score: minMastery * 100 - Math.min(retries, 99) }];
+  });
+  return candidates.sort((a, b) => a.score - b.score || a.index - b.index)[0]?.strand;
 }
 
 export function unitProgress(state: V8State, unitId: string): number {

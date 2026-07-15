@@ -1,10 +1,14 @@
 import { buildSession, nextUnit, pathSummary, unitProgress } from "../learning";
+import { CURRICULUM, STAGES } from "../curriculum";
 import { useV8Store } from "../store";
 
 export function Today() {
   const { state, dispatch, navigate } = useV8Store();
   const session = buildSession(state);
   const unit = nextUnit(state);
+  const stage = STAGES[unit.stage - 1];
+  const unitsInStage = CURRICULUM.filter((candidate) => candidate.stage === unit.stage);
+  const unitPosition = unitsInStage.findIndex((candidate) => candidate.id === unit.id) + 1;
   const summary = pathSummary(state);
   const currentProject = state.sketches.find((sketch) => sketch.id === state.activeSketchId) ?? state.sketches.at(-1);
   const firstUnfinished = session.items.find((item) => !state.completedActivityIds.includes(item.activityId));
@@ -14,19 +18,25 @@ export function Today() {
     <div className="page-stack today-page">
       <section className="today-focus">
         <div className="today-copy">
-          <span className="eyebrow">Today · {state.settings.dailyMinutes} minute practice</span>
+          <span className="eyebrow">Learn · {state.settings.dailyMinutes}-minute session</span>
           <h1>Turn one relationship into music.</h1>
           <p>{session.purpose}</p>
-          <div className="today-meta"><span>{unit.title}</span><span>{state.settings.instrument}</span><span>{state.settings.tonicName} {state.settings.mode}</span></div>
+          <div className="course-location" aria-label="Current course location">
+            <div><small>Stage {unit.stage} of {STAGES.length}</small><strong>{stage.title}</strong></div>
+            <i aria-hidden="true">→</i>
+            <div><small>Current unit · {unitPosition} of {unitsInStage.length}</small><strong>{unit.title}</strong></div>
+            <button className="text-action" onClick={() => navigate("path")}>View Course map</button>
+          </div>
+          <div className="today-meta"><span>{state.settings.instrument}</span><span>{state.settings.tonicName} {state.settings.mode}</span></div>
           {sessionComplete
-            ? <button className="primary-action large" onClick={() => navigate("path")}>Today’s session is complete — explore your Path</button>
+            ? <button className="primary-action large" onClick={() => navigate("path")}>Session complete — open the Course map</button>
             : <button className="primary-action large" onClick={() => dispatch({ type: "openActivity", activityId: first.activityId })}>Start with: {first.title}</button>}
         </div>
         <div className="session-ring" aria-label={`${unitProgress(state, unit.id)} percent of unit complete`}><strong>{unitProgress(state, unit.id)}%</strong><span>unit complete</span></div>
       </section>
 
       <section className="session-plan card">
-        <header><div><span className="eyebrow">Balanced session</span><h2>{session.title}</h2></div><strong>{session.totalMinutes} min</strong></header>
+        <header><div><span className="eyebrow">Guided session</span><h2>{session.title}</h2></div><strong>{session.totalMinutes} min</strong></header>
         <ol>
           {session.items.map((item, index) => {
             const complete = state.completedActivityIds.includes(item.activityId);
