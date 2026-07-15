@@ -32,6 +32,10 @@ maintenance or recreating the deployment.
 1. Create a project in the [Firebase console](https://console.firebase.google.com/).
 2. Add a Web app and copy its configuration values into a new `.env.local`, using
    `.env.example` as the template.
+   For GitHub Actions deployments, add the same six `VITE_FIREBASE_*` entries as
+   repository variables under **Settings → Secrets and variables → Actions →
+   Variables**. The local file is ignored by Git and is not available to the
+   deployment workflow.
 3. In **Authentication → Sign-in method**, enable Google.
 4. Create a Cloud Firestore database. The repository's `firestore.rules` ensures
    each authenticated account can access only its own `/users/{uid}` data.
