@@ -20,9 +20,11 @@ import {
   type Firestore,
   type Unsubscribe
 } from "firebase/firestore";
+import { deleteObject, getBlob, getStorage, ref, uploadBytes } from "firebase/storage";
+import { loadBlob } from "./repository";
 import { cloudProfile, cloudSketch } from "./sync";
 import type { CloudProfile } from "./sync";
-import type { CompetencyEvidence, Sketch, V8State } from "./types";
+import type { CompetencyEvidence, RecordedTake, Sketch, V8State } from "./types";
 import { useV8Store } from "./store";
 
 const firebaseConfig = {
@@ -39,6 +41,7 @@ export const CLOUD_CONFIGURED = Boolean(firebaseConfig.apiKey && firebaseConfig.
 const app = CLOUD_CONFIGURED ? (getApps()[0] ?? initializeApp(firebaseConfig)) : null;
 const auth = app ? getAuth(app) : null;
 const database = app ? getFirestore(app) : null;
+const recordingStorage = app && firebaseConfig.storageBucket ? getStorage(app) : null;
 
 export type SyncStatus = "local-only" | "signed-out" | "syncing" | "synced" | "offline" | "error";
 
@@ -49,6 +52,10 @@ interface CloudValue {
   message: string;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  uploadFinishedTake: (sketchId: string, takeId: string) => Promise<void>;
+  removeUploadedTake: (sketchId: string, takeId: string) => Promise<void>;
+  uploadedTakeBlob: (take: RecordedTake) => Promise<Blob | null>;
+  deleteUploadedTakes: (sketch: Sketch) => Promise<void>;
 }
 
 const CloudContext = createContext<CloudValue | null>(null);
@@ -114,6 +121,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<SyncStatus>(CLOUD_CONFIGURED ? "signed-out" : "local-only");
   const [message, setMessage] = useState(CLOUD_CONFIGURED ? "Sign in to synchronise devices." : "Cloud sync is ready for Firebase configuration.");
   const [remoteReady, setRemoteReady] = useState(false);
+  const [connectivityRevision, setConnectivityRevision] = useState(0);
   const cacheRef = useRef<SyncCache>(emptyCache());
   const uploadingRef = useRef(false);
   const queuedRef = useRef(false);
@@ -173,7 +181,10 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   }, [user?.uid, dispatch]);
 
   useEffect(() => {
-    const online = () => { if (user) { setStatus("syncing"); setMessage("Connection restored. Synchronising…"); } };
+    const online = () => {
+      setConnectivityRevision((value) => value + 1);
+      if (user) { setStatus("syncing"); setMessage("Connection restored. Synchronising queued changes…"); }
+    };
     const offline = () => { setStatus("offline"); setMessage("Working offline. Changes will synchronise when connected."); };
     addEventListener("online", online);
     addEventListener("offline", offline);
@@ -182,6 +193,11 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!database || !user || !hydrated || !remoteReady) return;
+    if (!navigator.onLine) {
+      setStatus("offline");
+      setMessage("Saved offline; waiting for a connection.");
+      return;
+    }
     const timer = setTimeout(() => {
       if (uploadingRef.current) { queuedRef.current = true; return; }
       uploadingRef.current = true;
@@ -201,7 +217,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
         });
     }, 650);
     return () => clearTimeout(timer);
-  }, [state, user?.uid, hydrated, remoteReady]);
+  }, [state, user?.uid, hydrated, remoteReady, connectivityRevision]);
 
   const value = useMemo<CloudValue>(() => ({
     configured: CLOUD_CONFIGURED,
@@ -212,8 +228,53 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       if (!auth) throw new Error("Firebase is not configured yet.");
       await signInWithPopup(auth, new GoogleAuthProvider());
     },
-    signOut: async () => { if (auth) await firebaseSignOut(auth); }
-  }), [user, status, message]);
+    signOut: async () => { if (auth) await firebaseSignOut(auth); },
+    uploadFinishedTake: async (sketchId, takeId) => {
+      if (!user || !recordingStorage) throw new Error("Sign in with recording storage configured before sharing a take.");
+      if (!navigator.onLine) throw new Error("Reconnect before sharing a take. The private device copy remains safe.");
+      const sketch = state.sketches.find((item) => item.id === sketchId);
+      if (!sketch || sketch.status !== "finished") throw new Error("Only a take from a finished project can be shared across devices.");
+      const take = sketch.takes.find((item) => item.id === takeId);
+      if (!take?.blobId) throw new Error("This device does not have that recording.");
+      const blob = await loadBlob(take.blobId);
+      if (!blob) throw new Error("The retained recording could not be found on this device.");
+      if (blob.size > 50 * 1024 * 1024) throw new Error("This take is larger than the 50 MB sharing limit. It remains on this device.");
+      if (blob.type && !blob.type.startsWith("audio/")) throw new Error("Only audio recordings can be shared.");
+      const storagePath = `users/${user.uid}/finished-takes/${sketch.id}/${take.id}`;
+      await uploadBytes(ref(recordingStorage, storagePath), blob, {
+        contentType: blob.type || "audio/webm",
+        customMetadata: { sketchId: sketch.id, takeId: take.id, explicitlySelected: "true" }
+      });
+      dispatch({
+        type: "setTakeCloud", sketchId: sketch.id, takeId: take.id,
+        cloud: { storagePath, contentType: blob.type || "audio/webm", bytes: blob.size, uploadedAt: new Date().toISOString() },
+        note: "Explicitly shared from a finished project; the device copy remains available offline."
+      });
+    },
+    removeUploadedTake: async (sketchId, takeId) => {
+      if (!user || !recordingStorage) throw new Error("Sign in before removing a shared take.");
+      const sketch = state.sketches.find((item) => item.id === sketchId);
+      const take = sketch?.takes.find((item) => item.id === takeId);
+      if (!sketch || !take?.cloud) return;
+      try { await deleteObject(ref(recordingStorage, take.cloud.storagePath)); }
+      catch (error) {
+        if (!(error instanceof Error) || !("code" in error) || (error as Error & { code: string }).code !== "storage/object-not-found") throw error;
+      }
+      dispatch({ type: "setTakeCloud", sketchId: sketch.id, takeId: take.id, cloud: null, note: "Cross-device copy removed; any retained device copy remains private." });
+    },
+    uploadedTakeBlob: async (take) => {
+      if (!user || !recordingStorage || !take.cloud) return null;
+      if (!take.cloud.storagePath.startsWith(`users/${user.uid}/finished-takes/`)) return null;
+      return getBlob(ref(recordingStorage, take.cloud.storagePath), 50 * 1024 * 1024);
+    },
+    deleteUploadedTakes: async (sketch) => {
+      if (!sketch.takes.some((take) => take.cloud)) return;
+      if (!user || !recordingStorage) throw new Error("Sign in and reconnect before deleting a sketch with shared takes.");
+      await Promise.all(sketch.takes.flatMap((take) => take.cloud ? [deleteObject(ref(recordingStorage, take.cloud.storagePath)).catch((error: unknown) => {
+        if (!(error instanceof Error) || !("code" in error) || (error as Error & { code: string }).code !== "storage/object-not-found") throw error;
+      })] : []));
+    }
+  }), [user, status, message, state]);
   return <CloudContext.Provider value={value}>{children}</CloudContext.Provider>;
 }
 

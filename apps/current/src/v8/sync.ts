@@ -1,4 +1,5 @@
-import type { CompetencyEvidence, LearnerSettings, Sketch, V8State } from "./types";
+import { SKETCH_SYNC_FIELDS } from "./types";
+import type { CompetencyEvidence, LearnerSettings, Sketch, SketchSyncField, V8State } from "./types";
 
 export interface CloudProfile {
   schemaVersion: 1;
@@ -31,8 +32,12 @@ export function cloudProfile(state: V8State): CloudProfile {
 }
 
 export function cloudSketch(sketch: Sketch): Sketch {
-  // Audio blobs and their device-only metadata never enter cloud sync.
-  return { ...sketch, takes: [] };
+  // Device blob ids remain private. Only metadata for takes the learner explicitly
+  // selected from a finished project enters cloud sync.
+  return {
+    ...sketch,
+    takes: sketch.takes.filter((take) => take.cloud).map((take) => ({ ...take, blobId: undefined }))
+  };
 }
 
 function newestDate(a?: string, b?: string): string {
@@ -45,14 +50,52 @@ function mergeDeletions(local: Record<string, string>, remote: Record<string, st
   return merged;
 }
 
-function mergeTakes(local: Sketch["takes"], remote: Sketch["takes"]) {
-  const byId = new Map([...remote, ...local].map((take) => [take.id, take]));
-  return [...byId.values()];
+function mergeTakes(local: Sketch["takes"], remote: Sketch["takes"], remoteIsNewer: boolean) {
+  const remoteById = new Map(remote.map((take) => [take.id, take]));
+  const merged = remote.map((take) => {
+    const deviceTake = local.find((item) => item.id === take.id);
+    return deviceTake ? { ...take, ...deviceTake, cloud: newestDate(deviceTake.cloud?.uploadedAt, take.cloud?.uploadedAt) === take.cloud?.uploadedAt ? take.cloud : deviceTake.cloud } : take;
+  });
+  for (const take of local) {
+    if (remoteById.has(take.id)) continue;
+    // A newer cloud sketch omitting previously shared metadata means the cloud copy
+    // was deliberately removed. Preserve only a private device copy, if one exists.
+    if (remoteIsNewer && take.cloud) {
+      if (take.blobId) merged.push({ ...take, cloud: undefined });
+    } else {
+      merged.push(take);
+    }
+  }
+  return merged.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 function mergeRevisions(local: Sketch["revisions"], remote: Sketch["revisions"]) {
   const byId = new Map([...remote, ...local].map((revision) => [revision.id, revision]));
   return [...byId.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+function fieldTime(sketch: Sketch, field: SketchSyncField): string {
+  return sketch.fieldUpdatedAt?.[field] ?? sketch.updatedAt;
+}
+
+function mergeSketch(local: Sketch, remote: Sketch): Sketch {
+  const remoteIsNewer = remote.updatedAt > local.updatedAt;
+  const merged = { ...local } as Sketch;
+  const fieldUpdatedAt: Sketch["fieldUpdatedAt"] = { ...local.fieldUpdatedAt };
+  for (const field of SKETCH_SYNC_FIELDS) {
+    const localTime = fieldTime(local, field);
+    const remoteTime = fieldTime(remote, field);
+    if (remoteTime > localTime) merged[field] = remote[field] as never;
+    fieldUpdatedAt[field] = newestDate(localTime, remoteTime);
+  }
+  return {
+    ...merged,
+    createdAt: local.createdAt < remote.createdAt ? local.createdAt : remote.createdAt,
+    updatedAt: newestDate(local.updatedAt, remote.updatedAt),
+    fieldUpdatedAt,
+    takes: mergeTakes(local.takes, remote.takes, remoteIsNewer),
+    revisions: mergeRevisions(local.revisions, remote.revisions)
+  };
 }
 
 export function mergeCloudSnapshot(state: V8State, incoming: CloudSnapshot): V8State {
@@ -68,12 +111,7 @@ export function mergeCloudSnapshot(state: V8State, incoming: CloudSnapshot): V8S
   for (const remote of incoming.sketches ?? []) {
     const local = sketches.get(remote.id);
     if (!local) sketches.set(remote.id, remote);
-    else if (remote.updatedAt > local.updatedAt) sketches.set(remote.id, {
-      ...remote,
-      takes: mergeTakes(local.takes, remote.takes),
-      revisions: mergeRevisions(local.revisions, remote.revisions)
-    });
-    else sketches.set(local.id, { ...local, revisions: mergeRevisions(local.revisions, remote.revisions) });
+    else sketches.set(local.id, mergeSketch(local, remote));
   }
   const visibleSketches = [...sketches.values()].filter((sketch) => !deletedSketchIds[sketch.id] || deletedSketchIds[sketch.id] < sketch.updatedAt);
   const activeSketchId = visibleSketches.some((sketch) => sketch.id === state.activeSketchId) ? state.activeSketchId : null;

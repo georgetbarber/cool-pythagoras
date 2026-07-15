@@ -8,6 +8,7 @@ import { SettingsPanel } from "../v8/components/SettingsPanel";
 import { Today } from "../v8/features/Today";
 import { Path } from "../v8/features/Path";
 import { Practice } from "../v8/features/Practice";
+import { Play } from "../v8/features/Play";
 import { Create } from "../v8/features/Create";
 import { Explore } from "../v8/features/Explore";
 
@@ -15,6 +16,7 @@ const NAV: Array<{ id: RouteId; label: string; symbol: string; purpose: string }
   { id: "today", label: "Today", symbol: "●", purpose: "One clear next action" },
   { id: "path", label: "Path", symbol: "↗", purpose: "Connected development" },
   { id: "practice", label: "Practice", symbol: "◎", purpose: "Strengthen a weak link" },
+  { id: "play", label: "Play", symbol: "◉", purpose: "Follow a prompt and flow" },
   { id: "create", label: "Create", symbol: "✦", purpose: "Turn choices into music" },
   { id: "explore", label: "Explore", symbol: "⌁", purpose: "Follow relationships" }
 ];
@@ -41,9 +43,11 @@ function V8Application() {
         <button className="settings-button" onClick={() => setSettingsOpen(true)}><span>⚙</span><div><strong>Settings and sync</strong><small>{cloud.user ? cloud.status : "Private backup and devices"}</small></div></button>
       </aside>
       <main id="main-content" tabIndex={-1}>
+        {cloud.status === "offline" && <div className="offline-banner" role="status"><strong>Working offline.</strong> Your changes are safe on this device and will synchronise after reconnection.</div>}
         {state.route === "today" && <Today />}
         {state.route === "path" && <Path />}
         {state.route === "practice" && <Practice />}
+        {state.route === "play" && <Play />}
         {state.route === "create" && <Create />}
         {state.route === "explore" && <Explore />}
       </main>

@@ -9,6 +9,8 @@ find it on the instrument, vary it deliberately, and turn it into original music
 - **Today** presents one balanced 25-minute session.
 - **Path** contains 48 competency-paced units across eight connected stages.
 - **Practice** targets sound, rhythm, ear, fretboard, phrasing and creative work.
+- **Play** runs ability-matched, one-prompt-at-a-time groove, riff, degree and
+  chord flows with no score or planning load.
 - **Create** stores sketches, exact voicings, revisions and recorded takes locally.
 - **Explore** connects tonal context, chromatic colour, harmony and fretboard position.
 
@@ -25,12 +27,14 @@ devices. The app shell and a small structured-data cache remain available offlin
 queued changes synchronise when connectivity returns. Complete manual backups can
 still be exported and imported.
 
-Recordings are different: a take remains temporary until explicitly retained,
-retained takes stay on that device, and audio is never uploaded or synchronised.
-Settings reports retained-audio usage and can clear it without touching learning
-progress. Microphone feedback remains limited to reliable monophonic pitch,
-separated rhythm attacks and recorded self-comparison; V8 does not claim
-polyphonic performance recognition. There are no analytics.
+Recordings are different: a take remains temporary until explicitly retained and
+stays on that device by default. From a finished project, a signed-in learner can
+explicitly select one individual take to make available on their own devices;
+unselected audio never uploads. Settings reports retained-audio usage and can
+clear device copies without touching learning progress. Microphone feedback
+remains limited to reliable monophonic pitch, separated rhythm attacks and
+recorded self-comparison; V8 does not claim polyphonic performance recognition.
+There are no analytics.
 
 The private live deployment is available at
 [learn-the-guitar.web.app](https://learn-the-guitar.web.app). Sign into that same

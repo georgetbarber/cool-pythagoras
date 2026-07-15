@@ -41,9 +41,15 @@ Hosting deployment. It downloads updates automatically after publishing and
 reloads when the new service worker takes control. Bringing an already-open app
 back to the foreground is enough to let the update complete.
 
-Recordings remain device-only. Publishing application code does not upload them.
+Recordings remain device-only by default. Application code uploads audio only when
+the signed-in learner explicitly selects one retained take from a finished project.
 
 If deployment fails, the publisher keeps the window open and displays the failed
 step. Correct it and publish again. Firestore rules and indexes are kept in the
 repository and are deployed separately when those backend permissions need
-changing; ordinary app releases do not need a Firestore deployment.
+changing; ordinary app releases do not need a Firestore deployment. The initial
+selective-take release also requires Firebase Storage to be enabled and
+`firebase deploy --only storage` to publish `apps/current/storage.rules`. Apply
+`apps/current/storage.cors.json` to the bucket once as described in the Pixel
+setup guide; this permits authenticated in-browser blob playback without issuing
+a public download link.

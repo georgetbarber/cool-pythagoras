@@ -11,14 +11,17 @@ identifies the learner, and Cloud Firestore synchronises structured learning dat
 - curriculum progress and activity evidence;
 - mastery context, settings, and current path position;
 - sketches, chord choices, rhythm notes, sections, reflections, and revisions.
+- only those finished-project takes individually selected for cross-device use.
 
-Evidence is append-only. Concurrent sketch changes prefer the newest edit while
-merging revision history. Deletion timestamps prevent an offline device from
-restoring a sketch that was deleted elsewhere.
+Evidence is append-only. Concurrent sketch changes merge using per-field edit
+times while preserving revision history. Deletion timestamps prevent an offline
+device from restoring a sketch that was deleted elsewhere.
 
-Recordings never enter Firestore. A new take remains in memory until **Keep on
-this device** is selected. Retained audio remains on that device and can be
-measured or cleared from Settings.
+Recording audio never enters Firestore. A new take remains in memory until **Keep
+on this device** is selected and stays private by default. After a project is
+finished, the learner can explicitly share one chosen take to their authenticated
+Firebase Storage path. Storage rules accept only audio under 50 MB; transport and
+at-rest encryption are provided by Firebase. Unselected takes remain device-only.
 
 ## Firebase setup status
 
@@ -39,14 +42,23 @@ maintenance or recreating the deployment.
 3. In **Authentication → Sign-in method**, enable Google.
 4. Create a Cloud Firestore database. The repository's `firestore.rules` ensures
    each authenticated account can access only its own `/users/{uid}` data.
-5. Copy `.firebaserc.example` to `.firebaserc` and replace the project ID.
-6. Install the Firebase CLI, sign in, build, and deploy:
+5. Enable Firebase Storage. The repository's `storage.rules` restricts each take
+   to its authenticated owner, enforces audio content and caps it at 50 MB.
+   Apply `storage.cors.json` to the bucket once so authenticated browser playback
+   can read the audio as a private blob rather than creating a public download
+   link:
+
+   ```bash
+   gcloud storage buckets update gs://YOUR_STORAGE_BUCKET --cors-file=storage.cors.json
+   ```
+6. Copy `.firebaserc.example` to `.firebaserc` and replace the project ID.
+7. Install the Firebase CLI, sign in, build, and deploy:
 
    ```bash
    npm install --global firebase-tools
    firebase login
    npm run build
-   firebase deploy --only hosting,firestore
+   firebase deploy --only hosting,firestore,storage
    ```
 
 The Firebase web configuration is an application identifier and is safe to ship
@@ -76,7 +88,8 @@ If the development server is unavailable, export a complete backup from the loca
 address and import it at the live address before relying on cloud sync.
 
 The installed app works offline. Changes made offline are saved locally and sent
-to Firestore when connectivity returns.
+to Firestore when connectivity returns. **Protect offline data** in Settings asks
+the browser not to remove the local history during routine storage cleanup.
 
 ## Updating the app
 

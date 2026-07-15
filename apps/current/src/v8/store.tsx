@@ -3,9 +3,10 @@ import { CURRICULUM } from "./curriculum";
 import { loadPersistedState, newSketch, savePersistedState } from "./repository";
 import { mergeCloudSnapshot } from "./sync";
 import type { CloudSnapshot } from "./sync";
-import type { CompetencyEvidence, LearnerSettings, RouteId, Sketch, V8State } from "./types";
+import { SKETCH_SYNC_FIELDS } from "./types";
+import type { CompetencyEvidence, LearnerSettings, RecordedTake, RouteId, Sketch, V8State } from "./types";
 
-const ROUTES: RouteId[] = ["today", "path", "practice", "create", "explore"];
+const ROUTES: RouteId[] = ["today", "path", "practice", "play", "create", "explore"];
 const BASELINE_UNITS: Record<LearnerSettings["startingBaseline"], string> = {
   repair: "unit-01",
   some: "unit-03",
@@ -46,18 +47,29 @@ type Action =
   | { type: "updateSettings"; settings: Partial<LearnerSettings> }
   | { type: "createSketch" }
   | { type: "updateSketch"; sketch: Sketch }
+  | { type: "setTakeCloud"; sketchId: string; takeId: string; cloud: RecordedTake["cloud"] | null; note: string }
   | { type: "deleteSketch"; id: string }
   | { type: "clearRecordings" }
   | { type: "setActiveSketch"; id: string }
   | { type: "mergeCloud"; snapshot: CloudSnapshot }
   | { type: "replaceState"; state: V8State };
 
+function withSketchFieldTimes(state: V8State): V8State {
+  return {
+    ...state,
+    sketches: state.sketches.map((sketch) => ({
+      ...sketch,
+      fieldUpdatedAt: Object.fromEntries(SKETCH_SYNC_FIELDS.map((field) => [field, sketch.fieldUpdatedAt?.[field] ?? sketch.updatedAt]))
+    }))
+  };
+}
+
 function reducer(state: V8State, action: Action): V8State {
   const changedAt = new Date().toISOString();
   switch (action.type) {
-    case "hydrate": return { ...DEFAULT_STATE, ...action.state, deletedSketchIds: action.state.deletedSketchIds ?? {}, route: routeFromLocation() };
-    case "replaceState": return { ...DEFAULT_STATE, ...action.state, deletedSketchIds: action.state.deletedSketchIds ?? {}, route: routeFromLocation(), updatedAt: changedAt };
-    case "mergeCloud": return mergeCloudSnapshot(state, action.snapshot);
+    case "hydrate": return withSketchFieldTimes({ ...DEFAULT_STATE, ...action.state, deletedSketchIds: action.state.deletedSketchIds ?? {}, route: routeFromLocation() });
+    case "replaceState": return withSketchFieldTimes({ ...DEFAULT_STATE, ...action.state, deletedSketchIds: action.state.deletedSketchIds ?? {}, route: routeFromLocation(), updatedAt: changedAt });
+    case "mergeCloud": return withSketchFieldTimes(mergeCloudSnapshot(state, action.snapshot));
     case "navigate": return { ...state, route: action.route, activeActivityId: null };
     case "openUnit": return { ...state, route: "path", activeUnitId: action.unitId, activeActivityId: null, updatedAt: changedAt };
     case "openActivity": return { ...state, activeActivityId: action.activityId };
@@ -95,6 +107,15 @@ function reducer(state: V8State, action: Action): V8State {
       activeSketchId: action.sketch.id,
       updatedAt: changedAt
     };
+    case "setTakeCloud": return {
+      ...state,
+      sketches: state.sketches.map((sketch) => sketch.id === action.sketchId ? {
+        ...sketch,
+        takes: sketch.takes.map((take) => take.id === action.takeId ? { ...take, cloud: action.cloud ?? undefined, note: action.note } : take),
+        updatedAt: changedAt
+      } : sketch),
+      updatedAt: changedAt
+    };
     case "deleteSketch": return {
       ...state,
       sketches: state.sketches.filter((sketch) => sketch.id !== action.id),
@@ -104,7 +125,11 @@ function reducer(state: V8State, action: Action): V8State {
     };
     case "clearRecordings": return {
       ...state,
-      sketches: state.sketches.map((sketch) => sketch.takes.length ? { ...sketch, takes: [], updatedAt: changedAt } : sketch),
+      sketches: state.sketches.map((sketch) => sketch.takes.some((take) => take.blobId) ? {
+        ...sketch,
+        takes: sketch.takes.flatMap((take) => take.cloud ? [{ ...take, blobId: undefined }] : []),
+        updatedAt: changedAt
+      } : sketch),
       updatedAt: changedAt
     };
     case "setActiveSketch": return { ...state, activeSketchId: action.id, route: "create" };

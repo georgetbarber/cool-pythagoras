@@ -24,7 +24,7 @@ IndexedDB repositories       curriculum + activity definitions
           browser audio and recording adapters
 ```
 
-The shell has five destinations: Today, Path, Practice, Create, and Explore.
+The shell has six destinations: Today, Path, Practice, Play, Create, and Explore.
 History API routes are durable UI state; an activity can open a tool and return
 to its exact attempt, assistance, reflection, and timing state.
 
@@ -39,7 +39,7 @@ src/
     repository.ts  IndexedDB, fallback storage, blobs, archive export/import
     store.tsx       Versioned product state, commands, routing, persistence
     components/     Activity player, micro-study, rhythm notation, settings
-    features/       Today, Path, Practice, Create, Explore
+    features/       Today, Path, Practice, Play, Create, Explore
   core/
     music/          Theory, rhythm, motif, and chromatic descriptions
     instrument/     Fretboard geometry, shapes, transitions, fingering feasibility
@@ -66,21 +66,25 @@ tracked as artifacts and revisions, not reduced to a creativity score.
 
 ## Persistence and Privacy
 
-IndexedDB stores V8 state and device-only recorded blobs behind a repository
-interface. Lightweight schema metadata and a graceful fallback use local storage.
-Saves are automatic. A versioned `.guitar-academy` archive exports and imports
-JSON plus retained local recordings.
+IndexedDB stores V8 state and private recorded blobs behind a repository interface;
+local storage is used only as a compatibility fallback. Saves are automatic. A
+versioned binary `.guitar-academy` archive stores its validated state index beside
+raw recording blobs, avoiding the memory and size cost of base64 JSON for large
+Sketchbooks while remaining compatible with the earlier JSON archive.
 
 When configured, Firebase Authentication and Firestore synchronise structured
 learning data. Evidence is append-only; settings use last-modified resolution;
-sketches use newest-edit resolution while merging revision history; deletion
-tombstones prevent stale resurrection. Firestore rules isolate every learner under
-their authenticated user ID. The service worker makes the application installable
-and caches its shell for offline use.
+sketch fields carry individual edit times so independent device edits can merge;
+revision history is unioned and deletion tombstones prevent stale resurrection.
+Reconnect events retry queued changes. Firestore rules isolate every learner under
+their authenticated user ID. The service worker caches the complete application
+shell for offline use, and learners can request persistent browser storage.
 
-Recordings are temporary by default and are explicitly excluded from cloud
-documents. Retained audio stays on one device and can be measured or cleared.
-There are no analytics. Microphone feedback claims only clean sustained
+Recordings are temporary by default. A retained take stays private to its device
+unless the learner finishes the project and explicitly selects that one take for
+cross-device use. Only its metadata enters Firestore; the audio object is confined
+to the authenticated learner's Firebase Storage path, with a 50 MB audio-only
+rule. There are no analytics. Microphone feedback claims only clean sustained
 monophonic pitch and suitable onset timing; richer performances use comparison
 and self-review.
 
@@ -88,10 +92,11 @@ and self-review.
 
 Unit tests cover theory, spelling, chord relationships, fretboard geometry,
 fingering feasibility, rhythm, motif transformation, chromatic interpretation,
-curriculum integrity, mastery, and session budgets. Browser journeys cover first
-launch, navigation/history, activity evidence, interrupted work, Sketchbook
-persistence, microphone denial, exports, and 320/390 px layouts. Production build
-success is part of the release gate.
+curriculum integrity, mastery, session budgets, free-play ability matching,
+field-level conflict merges, and substantial histories. Browser journeys cover
+first launch, navigation/history, prompted play, offline continuation, activity
+evidence, interrupted work, Sketchbook persistence, microphone denial, binary
+exports, and mobile layouts. Production build success is part of the release gate.
 
 ## Architectural Rules
 

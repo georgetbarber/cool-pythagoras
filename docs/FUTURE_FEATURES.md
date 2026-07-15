@@ -38,7 +38,7 @@ future additions rather than missing fixes:
 
 ## Play and open practice
 
-- [ ] Prompted free-play zone. A low-pressure space, separate from the
+- [x] Prompted free-play zone. A low-pressure space, separate from the
       structured path, where the app shows one instruction at a time and the
       learner just follows it — no deciding what to work on. Prompts rotate
       through short, playable actions: "play this chord", "copy this one-bar
@@ -58,21 +58,22 @@ future additions rather than missing fixes:
         current key), "riff echo" (short call-and-copy phrases), "degree hunt"
         (locate a scale degree on the neck), "groove keeper" (sustain a pulse or
         rhythm). Difficulty, key and prompt pool derive automatically from level.
-      - Guardrail check: this could become a new top-level workspace (see
-        Guardrails). Prefer surfacing it contextually — e.g. from Today or
-        Create — rather than as an always-present tab, unless testing shows a
-        dedicated space is genuinely clearer. Keep configuration hidden; it
-        should start with one tap.
+      - Delivered as a dedicated Play tab, following explicit product direction
+        that this should be a substantial recurring destination. It also remains
+        linked from Today, starts in one tap, and keeps configuration hidden.
 
 ## Product and platform additions
 
-- [ ] Test and improve cross-device conflict resolution with larger real
-      histories.
-- [ ] Improve export/import for substantial Sketchbook histories.
-- [ ] Consider encrypted upload of explicitly selected finished-project takes
-      only if device-only recordings prove limiting in real use.
-- [ ] Consider offline-first improvements after the current PWA workflow has
-      been observed on real devices.
+- [x] Improve cross-device conflict resolution with per-field sketch timestamps,
+      deletion protection, reconnect retries, and 1,500-record merge coverage.
+- [x] Improve export/import for substantial Sketchbook histories with a validated
+      binary archive that stores raw audio without base64 expansion.
+- [x] Add encrypted transport and storage for explicitly selected
+      finished-project takes. Audio stays device-only by default; only a take the
+      learner chooses is uploaded to their authenticated Firebase Storage path.
+- [x] Improve offline-first behaviour with complete shell precaching, visible
+      connection state, reconnect sync, IndexedDB-first saves, and optional
+      persistent browser storage.
 
 ## Guardrails
 
@@ -83,7 +84,8 @@ relationship-first way to implement them:
 - Numerical creativity scores or progress based on clicks alone.
 - Analytics or automatic recording uploads.
 - Licensed repertoire as a dependency of the core curriculum.
-- New top-level workspaces where contextual disclosure would be clearer.
+- Further top-level workspaces without a clear recurring learner purpose. Play is
+  the deliberate exception and remains contextually linked from Today.
 
 ## How to promote an item into development
 

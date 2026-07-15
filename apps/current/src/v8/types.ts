@@ -1,6 +1,6 @@
 import type { ModeId } from "../core/music/types";
 
-export type RouteId = "today" | "path" | "practice" | "create" | "explore";
+export type RouteId = "today" | "path" | "practice" | "play" | "create" | "explore";
 export type MasteryState = "introduced" | "practising" | "secure" | "transfer-ready";
 export type Assistance = "none" | "hint" | "reveal" | "guided";
 export type EvidenceSource = "recognition" | "production" | "performance" | "transfer" | "creation" | "reflection";
@@ -141,6 +141,12 @@ export interface RecordedTake {
   createdAt: string;
   blobId?: string;
   note: string;
+  cloud?: {
+    storagePath: string;
+    contentType: string;
+    bytes: number;
+    uploadedAt: string;
+  };
 }
 
 export interface SketchRevision {
@@ -149,6 +155,12 @@ export interface SketchRevision {
   summary: string;
   snapshot: Pick<Sketch, "chords" | "melody" | "rhythmPattern" | "sections" | "notes">;
 }
+
+export const SKETCH_SYNC_FIELDS = [
+  "name", "intention", "tags", "tempo", "metre", "key", "mode", "chords", "melody",
+  "rhythmPattern", "bassMovement", "sections", "notes", "ambiguityNotes", "reflections", "status"
+] as const;
+export type SketchSyncField = typeof SKETCH_SYNC_FIELDS[number];
 
 export interface Sketch {
   id: string;
@@ -172,6 +184,7 @@ export interface Sketch {
   status: "capture" | "understand" | "vary" | "arrange" | "record" | "compare" | "revise" | "finished";
   createdAt: string;
   updatedAt: string;
+  fieldUpdatedAt?: Partial<Record<SketchSyncField, string>>;
 }
 
 export interface V8State {

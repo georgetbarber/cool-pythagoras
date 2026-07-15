@@ -5,8 +5,10 @@ import type { MicrophoneSession, TakeRecorder } from "../../audio/microphone";
 import { buildChords, createContext } from "../../core/music/theory";
 import { generateShapes } from "../../core/instrument/guitar";
 import { clearSketchRecordings, loadBlob, saveBlob } from "../repository";
+import { useCloudSync } from "../cloud";
 import { useV8Store } from "../store";
-import type { ChordEvent, Sketch, SketchRevision } from "../types";
+import { SKETCH_SYNC_FIELDS } from "../types";
+import type { ChordEvent, RecordedTake, Sketch, SketchRevision, SketchSyncField } from "../types";
 
 const WORKFLOW: Sketch["status"][] = ["capture", "understand", "vary", "arrange", "record", "compare", "revise", "finished"];
 const TRANSFORMATIONS = [
@@ -41,6 +43,7 @@ export function Create() {
 
 function SketchEditor({ sketch }: { sketch: Sketch }) {
   const { state, dispatch } = useV8Store();
+  const cloud = useCloudSync();
   const context = useMemo(() => createContext(sketch.key ?? state.settings.tonicName, sketch.mode ?? state.settings.mode), [sketch.key, sketch.mode, state.settings]);
   const [sevenths, setSevenths] = useState(false);
   const [guideDismissed, setGuideDismissed] = useState(false);
@@ -53,7 +56,12 @@ function SketchEditor({ sketch }: { sketch: Sketch }) {
   const [pendingTake, setPendingTake] = useState<{ blob: Blob; url: string } | null>(null);
   useEffect(() => () => { sessionRef.current?.close(); stopAudio(); }, []);
   useEffect(() => () => { if (pendingTake) URL.revokeObjectURL(pendingTake.url); }, [pendingTake]);
-  const update = (changes: Partial<Sketch>) => dispatch({ type: "updateSketch", sketch: { ...sketch, ...changes, updatedAt: new Date().toISOString() } });
+  const update = (changes: Partial<Sketch>) => {
+    const updatedAt = new Date().toISOString();
+    const fieldUpdatedAt = { ...sketch.fieldUpdatedAt };
+    for (const field of Object.keys(changes)) if ((SKETCH_SYNC_FIELDS as readonly string[]).includes(field)) fieldUpdatedAt[field as SketchSyncField] = updatedAt;
+    dispatch({ type: "updateSketch", sketch: { ...sketch, ...changes, fieldUpdatedAt, updatedAt } });
+  };
   const revise = (summary: string, changes: Partial<Sketch>) => update({
     ...changes,
     revisions: [...sketch.revisions, snapshot(sketch, summary)],
@@ -89,8 +97,9 @@ function SketchEditor({ sketch }: { sketch: Sketch }) {
     await saveBlob(id, pendingTake.blob);
     update({ takes: [...sketch.takes, { id, blobId: id, name: `Take ${sketch.takes.length + 1}`, createdAt: new Date().toISOString(), note: "Kept on this device for intentional comparison." }], status: "compare" });
     setPendingTake(null);
-    setMessage("Take retained on this device only. It will not upload or appear on another device.");
+    setMessage("Take retained privately on this device. Finish the project to make an explicit cross-device copy available.");
   };
+  const visibleTakes = sketch.takes.filter((take) => take.blobId || take.cloud);
   return (
     <div className="studio-stack">
       <header className="studio-header">
@@ -107,20 +116,36 @@ function SketchEditor({ sketch }: { sketch: Sketch }) {
       <section className="card transformation-panel"><header><div><span className="eyebrow">Optional experiments</span><h2>Preserve one identity; change another.</h2><p>These are comparisons, not rules or answers.</p></div></header><div className="transformation-grid">{TRANSFORMATIONS.map(([title, explanation]) => <button onClick={() => revise(title, title === "Create a B section" ? { sections: [...new Set([...sketch.sections, "B"])] } : { notes: `${sketch.notes}\nExperiment: ${title} — ${explanation}`.trim() })} key={title}><strong>{title}</strong><span>{explanation}</span></button>)}</div></section>
       <div className="studio-grid">
         <section className="card notes-panel"><span className="eyebrow">Arrangement and reflection</span><h2>Notes to your future self</h2><textarea value={sketch.notes} onChange={(event) => update({ notes: event.target.value })} placeholder="What should stay? What is the next deliberate change?" /><label>Ambiguity or alternate readings<textarea value={sketch.ambiguityNotes} onChange={(event) => update({ ambiguityNotes: event.target.value })} placeholder="Outside the key is information, not an error…" /></label></section>
-        <section className="card take-panel"><span className="eyebrow">Optional listening evidence</span><h2>{sketch.takes.length} retained takes</h2><p>{message}</p>{pendingTake && <div className="pending-take"><strong>Temporary take—not stored yet</strong><audio controls src={pendingTake.url} /><div className="action-row"><button className="primary-action" onClick={() => void keepPendingTake()}>Keep on this device</button><button className="secondary-action" onClick={() => { setPendingTake(null); setMessage("Temporary take discarded. No storage was used."); }}>Discard</button></div><small>Kept recordings remain only on this device and are never included in cloud sync.</small></div>}{sketch.takes.map((take) => <TakePlayer blobId={take.blobId} name={take.name} key={take.id} />)}<div className="revision-count"><strong>{sketch.revisions.length}</strong><span>preserved revisions</span></div></section>
+        <section className="card take-panel"><span className="eyebrow">Optional listening evidence</span><h2>{visibleTakes.length} retained takes</h2><p>{message}</p>{pendingTake && <div className="pending-take"><strong>Temporary take—not stored yet</strong><audio controls src={pendingTake.url} /><div className="action-row"><button className="primary-action" onClick={() => void keepPendingTake()}>Keep on this device</button><button className="secondary-action" onClick={() => { setPendingTake(null); setMessage("Temporary take discarded. No storage was used."); }}>Discard</button></div><small>A kept take stays private unless you later finish the project and explicitly share that individual take.</small></div>}{visibleTakes.map((take) => <TakePlayer sketch={sketch} take={take} key={take.id} />)}{sketch.status !== "finished" && visibleTakes.length > 0 && <small>Finish this version before choosing any individual take to share across signed-in devices.</small>}<div className="revision-count"><strong>{sketch.revisions.length}</strong><span>preserved revisions</span></div></section>
       </div>
-      <footer className="studio-footer"><button className="danger-action" onClick={async () => { if (confirm(`Delete “${sketch.name}”? Its retained recordings on this device will also be deleted.`)) { await clearSketchRecordings(sketch); dispatch({ type: "deleteSketch", id: sketch.id }); } }}>Delete sketch</button><button className="primary-action" onClick={() => revise("Marked finished after comparative listening", { status: "finished" })}>Finish this version</button></footer>
+      <footer className="studio-footer"><button className="danger-action" onClick={async () => { if (confirm(`Delete “${sketch.name}”? Its device recordings and any explicitly shared takes will also be deleted.`)) { try { await cloud.deleteUploadedTakes(sketch); await clearSketchRecordings(sketch); dispatch({ type: "deleteSketch", id: sketch.id }); } catch (error) { setMessage(error instanceof Error ? error.message : "The shared recordings could not be removed."); } } }}>Delete sketch</button><button className="primary-action" onClick={() => revise("Marked finished after comparative listening", { status: "finished" })}>Finish this version</button></footer>
     </div>
   );
 }
 
-function TakePlayer({ blobId, name }: { blobId?: string; name: string }) {
+function TakePlayer({ sketch, take }: { sketch: Sketch; take: RecordedTake }) {
+  const cloud = useCloudSync();
   const [url, setUrl] = useState<string | null>(null);
+  const [transfer, setTransfer] = useState<string>("");
   useEffect(() => {
-    if (!blobId) return;
+    if (!take.blobId && !take.cloud) return;
     let active = true; let objectUrl: string | null = null;
-    void loadBlob(blobId).then((blob) => { if (active && blob) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); } });
+    setUrl(null);
+    void (async () => {
+      const blob = take.blobId ? await loadBlob(take.blobId) : await cloud.uploadedTakeBlob(take);
+      if (active && blob) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); return; }
+    })();
     return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [blobId]);
-  return url ? <div className="take-player"><strong>{name}</strong><audio controls src={url} /></div> : <small>{name} recording unavailable</small>;
+  }, [take.blobId, take.cloud?.storagePath, cloud.user?.uid]);
+  const upload = async () => {
+    setTransfer("Uploading the explicitly selected take…");
+    try { await cloud.uploadFinishedTake(sketch.id, take.id); setTransfer("Available on your signed-in devices."); }
+    catch (error) { setTransfer(error instanceof Error ? error.message : "The take could not be shared."); }
+  };
+  const remove = async () => {
+    setTransfer("Removing the cross-device copy…");
+    try { await cloud.removeUploadedTake(sketch.id, take.id); setTransfer("Cloud copy removed; any device copy remains private."); }
+    catch (error) { setTransfer(error instanceof Error ? error.message : "The shared copy could not be removed."); }
+  };
+  return <div className="take-player"><div><strong>{take.name}</strong>{take.cloud && <span>Shared deliberately · {(take.cloud.bytes / 1_048_576).toFixed(1)} MB</span>}</div>{url ? <audio controls src={url} /> : <small>{take.name} recording unavailable</small>}<div className="take-sharing">{sketch.status === "finished" && take.blobId && !take.cloud && <button className="secondary-action" disabled={!cloud.user || Boolean(transfer.startsWith("Uploading"))} onClick={() => void upload()}>{cloud.user ? "Share this take across devices" : "Sign in to share this take"}</button>}{take.cloud && <button className="text-action" onClick={() => void remove()}>Remove cross-device copy</button>}{transfer && <small>{transfer}</small>}</div></div>;
 }

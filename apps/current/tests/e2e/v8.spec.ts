@@ -22,20 +22,47 @@ test("first launch explains the learning contract before entering the app", asyn
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: /Acoustic/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("button", { name: /Early intermediate/ }).click();
+  await page.getByRole("button", { name: /Skip the basics/ }).click();
     await page.getByRole("button", { name: "Start your path" }).click();
   await expect(page.getByText("acoustic", { exact: true }).first()).toBeVisible();
 });
 
-test("navigates five focused destinations with real URL history", async ({ page }) => {
+test("navigates six focused destinations with real URL history", async ({ page }) => {
   await completeDiagnostic(page);
   const nav = learningNav(page);
-  for (const [label, path] of [["Path", "/path"], ["Practice", "/practice"], ["Create", "/create"], ["Explore", "/explore"], ["Today", "/today"]]) {
+  for (const [label, path] of [["Path", "/path"], ["Practice", "/practice"], ["Play", "/play"], ["Create", "/create"], ["Explore", "/explore"], ["Today", "/today"]]) {
     await nav.getByRole("button", { name: new RegExp(label) }).click();
     await expect(page).toHaveURL(new RegExp(`${path}$`));
   }
   await page.goBack();
   await expect(page).toHaveURL(/\/explore$/);
+});
+
+test("runs an ability-matched prompted free-play flow without scoring it", async ({ page }) => {
+  await completeDiagnostic(page);
+  await learningNav(page).getByRole("button", { name: /Play/ }).click();
+  await expect(page.getByRole("heading", { name: "Put the guitar in your hands." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Play Groove keeper" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Play Riff echo" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Build this relationship on Path" }).first()).toBeDisabled();
+  await page.getByRole("button", { name: "Start a mixed flow" }).click();
+  await expect(page.getByText("Your one instruction")).toBeVisible();
+  await expect(page.getByText(/There is no right response to submit/)).toBeVisible();
+  await page.getByRole("button", { name: "Hand cue" }).click();
+  await expect(page.getByText("Connect it to the hand")).toBeVisible();
+  await page.getByRole("button", { name: /Played it — keep flowing/ }).click();
+  await expect(page.getByLabel(/Prompt 2 of 8/)).toBeVisible();
+});
+
+test("keeps local learning and Free Play available when the connection drops", async ({ page, context }) => {
+  await completeDiagnostic(page);
+  await context.setOffline(true);
+  await expect(page.getByRole("status").filter({ hasText: "Working offline" })).toBeVisible();
+  await learningNav(page).getByRole("button", { name: /Play/ }).click();
+  await expect(page.getByRole("heading", { name: "Put the guitar in your hands." })).toBeVisible();
+  await page.getByRole("button", { name: "Start a mixed flow" }).click();
+  await expect(page.getByText("Your one instruction")).toBeVisible();
+  await context.setOffline(false);
 });
 
 test("records hints separately from independent learning evidence", async ({ page }) => {
@@ -44,6 +71,7 @@ test("records hints separately from independent learning evidence", async ({ pag
   await page.getByRole("button", { name: "Use a hint" }).click();
   await page.getByRole("button", { name: /Hear (?:reference and target|the tonic reference)/ }).click();
   await page.getByRole("button", { name: "Successful today" }).click();
+  await page.getByRole("button", { name: "Stop here for now" }).click();
   const nav = learningNav(page);
   await nav.getByRole("button", { name: /Practice/ }).click();
   await expect(page.getByText(/assisted attempt.*kept separate/).first()).toBeVisible();
@@ -104,7 +132,7 @@ test("exports a complete local backup", async ({ page }) => {
   await page.getByRole("button", { name: "Export complete backup" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/\.guitar-academy$/);
-  await expect(page.getByText(/Audio is never uploaded or synchronised/)).toBeVisible();
+  await expect(page.getByText(/Audio uploads only when you choose one retained take/)).toBeVisible();
 });
 
 test("gives reinstall guidance without claiming a surviving app window is installed", async ({ page }) => {

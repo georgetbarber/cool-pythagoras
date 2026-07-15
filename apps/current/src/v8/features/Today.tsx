@@ -36,6 +36,12 @@ export function Today() {
       </section>
 
       <div className="today-lower">
+        <section className="card free-play-glance">
+          <span className="eyebrow">Play without planning</span>
+          <h2>One prompt. Guitar in hand.</h2>
+          <p>Follow short chord, riff, scale-degree and groove actions drawn from relationships you have already met. No score and no setup.</p>
+          <button className="primary-action" onClick={() => navigate("play")}>Open Free Play</button>
+        </section>
         <section className="card project-glance">
           <span className="eyebrow">Current creative work</span>
           {currentProject ? <><h2>{currentProject.name}</h2><p>{currentProject.intention}</p><div className="workflow-mini"><span>{currentProject.status}</span><span>{currentProject.revisions.length} revisions</span><span>{currentProject.takes.length} takes</span></div><button className="secondary-action" onClick={() => { dispatch({ type: "setActiveSketch", id: currentProject.id }); navigate("create"); }}>Continue the sketch</button></> : <><h2>Your first musical sketch</h2><p>Capture two bars before they feel finished. Understanding can follow the sound.</p><button className="secondary-action" onClick={() => dispatch({ type: "createSketch" })}>Create a sketch</button></>}

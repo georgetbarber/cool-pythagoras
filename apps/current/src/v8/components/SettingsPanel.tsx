@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { clearStoredRecordings, exportArchive, importArchive, retainedRecordingBytes, storageEstimate } from "../repository";
+import { clearStoredRecordings, exportArchive, importArchive, requestPersistentStorage, retainedRecordingBytes, storageEstimate, storagePersistenceStatus } from "../repository";
 import { useCloudSync } from "../cloud";
 import { currentInstallPrompt, currentStandaloneMode, showInstallPrompt, subscribeInstallPrompt, subscribeStandaloneMode, type InstallPromptEvent } from "../install";
 import { useV8Store } from "../store";
@@ -8,7 +8,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useV8Store();
   const cloud = useCloudSync();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [message, setMessage] = useState("Progress stays local first and synchronises after sign-in. Recordings remain device-only.");
+  const [message, setMessage] = useState("Progress stays local first and synchronises after sign-in. Recordings stay private unless you explicitly share one finished-project take.");
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(currentInstallPrompt());
   const [standalone, setStandalone] = useState(currentStandaloneMode());
   useEffect(() => subscribeInstallPrompt(setInstallPrompt), []);
@@ -21,11 +21,19 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
     anchor.download = `guitar-academy-${new Date().toISOString().slice(0, 10)}.guitar-academy`;
     anchor.click();
     URL.revokeObjectURL(url);
+    const retained = state.sketches.reduce((count, sketch) => count + sketch.takes.filter((take) => take.blobId).length, 0);
+    setMessage(`Complete backup created with ${state.sketches.length} sketches, ${state.evidence.length} evidence records and ${retained} device recording${retained === 1 ? "" : "s"}.`);
   };
   const inspectStorage = async () => {
     const estimate = await storageEstimate();
     const recordings = await retainedRecordingBytes(state);
     setMessage(estimate ? `${(estimate.usage / 1_048_576).toFixed(1)} MB total local use; retained recordings use ${(recordings / 1_048_576).toFixed(1)} MB.` : `Retained recordings use ${(recordings / 1_048_576).toFixed(1)} MB. This browser does not report its total quota.`);
+  };
+  const protectOfflineData = async () => {
+    const current = await storagePersistenceStatus();
+    if (current) { setMessage("This browser already protects Guitar Academy's offline data from routine storage cleanup."); return; }
+    const granted = await requestPersistentStorage();
+    setMessage(granted === null ? "This browser does not offer persistent offline storage." : granted ? "Offline learning data is now protected from routine browser cleanup." : "The browser did not grant protected storage. Complete backups remain the safest long-term copy.");
   };
   return (
     <div className="settings-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
@@ -52,7 +60,8 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <button className="secondary-action" onClick={download}>Export complete backup</button>
           <button className="secondary-action" onClick={() => fileRef.current?.click()}>Import backup</button>
           <button className="text-action" onClick={inspectStorage}>Check local storage</button>
-          <button className="danger-action" disabled={!state.sketches.some((sketch) => sketch.takes.length)} onClick={async () => {
+          <button className="text-action" onClick={() => void protectOfflineData()}>Protect offline data</button>
+          <button className="danger-action" disabled={!state.sketches.some((sketch) => sketch.takes.some((take) => take.blobId))} onClick={async () => {
             if (!confirm("Delete every retained recording from this device? Learning progress and sketches will remain.")) return;
             await clearStoredRecordings(state);
             dispatch({ type: "clearRecordings" });
@@ -61,11 +70,17 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <input ref={fileRef} hidden type="file" accept=".guitar-academy,application/json" onChange={async (event) => {
             const file = event.target.files?.[0];
             if (!file) return;
-            try { dispatch({ type: "replaceState", state: await importArchive(file) }); setMessage("Backup imported successfully."); }
+            if (!confirm("Restore this complete backup? It will replace the learning history currently stored in this browser.")) { event.target.value = ""; return; }
+            try {
+              const restored = await importArchive(file);
+              dispatch({ type: "replaceState", state: restored });
+              setMessage(`Backup restored: ${restored.sketches.length} sketches and ${restored.evidence.length} evidence records passed validation.`);
+            }
             catch (error) { setMessage(error instanceof Error ? error.message : "The backup could not be imported."); }
+            finally { event.target.value = ""; }
           }} />
         </div>
-        <p className="privacy-message">{message} Audio is never uploaded or synchronised.</p>
+        <p className="privacy-message">{message} Audio uploads only when you choose one retained take from a finished project; other recordings never synchronise.</p>
       </section>
     </div>
   );

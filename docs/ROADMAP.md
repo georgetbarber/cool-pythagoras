@@ -10,7 +10,7 @@ driven by learner observation and musical review, not by adding dashboard breadt
 3. Replace placeholder browser-synth micro-study playback with reviewed original
    performances where that materially improves phrasing and tone learning.
 4. Add more activity-specific assessment only where it can be honest and reliable.
-5. Exercise cross-device conflict resolution and export/import with larger real histories.
+5. Observe the new Play tab, field-level sync and large-history backups on real devices.
 
 ## Deliberate Next Expansions
 
@@ -18,8 +18,6 @@ driven by learner observation and musical review, not by adding dashboard breadt
 - Add optional staff-pitch literacy without gating the core relationship path.
 - Extend fingering-aware voicing search and transition ranking with observed hand data.
 - Support alternate tunings through tuning-aware interval geometry.
-- Consider optional encrypted upload of explicitly selected finished-project takes
-  only if device-only recordings prove limiting in real use.
 
 ## Non-Goals
 
@@ -27,7 +25,7 @@ driven by learner observation and musical review, not by adding dashboard breadt
 - Numerical creativity scores or progress based on clicks alone.
 - Analytics or automatic recording uploads.
 - Licensed repertoire as a dependency of the core curriculum.
-- New top-level workspaces where contextual disclosure will do.
+- Further top-level workspaces where contextual disclosure will do.
 
 ## Decision Test
 

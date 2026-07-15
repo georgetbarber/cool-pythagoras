@@ -74,9 +74,9 @@ installed mobile versions then update automatically. See the
 
 `apps/current` is iteration 08, the recommended and only active development
 target. It is a curriculum-led system with 48 competency-paced units, one clear
-daily session, production-based evidence, targeted practice, relationship tools,
-and a durable local-first Sketchbook for composing, recording, revising, and
-finishing original music.
+daily session, production-based evidence, targeted practice, a guided Free Play
+flow, relationship tools, and a durable local-first Sketchbook for composing,
+recording, revising, and finishing original music.
 
 The historical apps remain intentionally isolated. They are evidence of the
 decisions made along the way, not packages that the current app imports.

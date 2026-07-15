@@ -8,6 +8,7 @@ import { transformRhythm, validateRhythm } from "../core/music/rhythm";
 import { CURRICULUM, validateCurriculum } from "./curriculum";
 import { DEFAULT_STATE } from "./store";
 import { buildSession, createEvidence, masteryFor } from "./learning";
+import { availableFreePlayModes, buildFreePlaySequence, freePlayAbilityLevel } from "./freePlay";
 import { cloudProfile, cloudSketch, mergeCloudSnapshot } from "./sync";
 
 describe("V8 musical-freedom foundations", () => {
@@ -22,6 +23,19 @@ describe("V8 musical-freedom foundations", () => {
     expect(session.totalMinutes).toBe(25);
     expect(session.items).toHaveLength(5);
     expect(session.items.some((item) => ["creative", "reflection"].includes(item.kind))).toBe(true);
+  });
+
+  it("builds varied free-play flows only from relationships available at the learner's level", () => {
+    expect(freePlayAbilityLevel(DEFAULT_STATE)).toBe(1);
+    expect(availableFreePlayModes(DEFAULT_STATE)).toEqual(["groove", "riff"]);
+    const firstFlow = buildFreePlaySequence(DEFAULT_STATE, "mix", 1);
+    expect(firstFlow).toHaveLength(8);
+    expect(new Set(firstFlow.map((prompt) => prompt.mode))).toEqual(new Set(["groove", "riff"]));
+    expect(firstFlow.every((prompt) => prompt.displayTokens.length > 0 && prompt.physicalCue && prompt.variation)).toBe(true);
+
+    const advanced = { ...DEFAULT_STATE, completedActivityIds: [CURRICULUM[18].activities[0].id] };
+    expect(freePlayAbilityLevel(advanced)).toBe(19);
+    expect(availableFreePlayModes(advanced)).toEqual(["groove", "riff", "degree", "chord"]);
   });
 
   it("uses the baseline only to choose the first recommended unit", () => {
@@ -83,16 +97,44 @@ describe("V8 musical-freedom foundations", () => {
     expect(merged.sketches[0].takes).toHaveLength(1);
   });
 
-  it("never includes recording metadata in a cloud sketch", () => {
+  it("syncs only explicitly shared take metadata and never exposes a device blob id", () => {
     const sketch = { ...DEFAULT_STATE, sketches: [] };
     expect(cloudProfile(sketch).schemaVersion).toBe(1);
     const source = {
       id: "s", name: "Test", intention: "", tags: [], tempo: 70, metre: "4/4" as const, key: null, mode: null,
       chords: [], melody: [], rhythmPattern: "", bassMovement: "", sections: ["A"], notes: "", ambiguityNotes: "",
-      takes: [{ id: "t", name: "Take", createdAt: "now", blobId: "private", note: "" }], revisions: [], reflections: [],
+      takes: [
+        { id: "private", name: "Private", createdAt: "now", blobId: "private", note: "" },
+        { id: "shared", name: "Shared", createdAt: "now", blobId: "device-copy", note: "", cloud: { storagePath: "users/u/finished-takes/s/shared", contentType: "audio/webm", bytes: 42, uploadedAt: "now" } }
+      ], revisions: [], reflections: [],
       status: "capture" as const, createdAt: "now", updatedAt: "now"
     };
-    expect(cloudSketch(source).takes).toEqual([]);
+    expect(cloudSketch(source).takes).toEqual([{ ...source.takes[1], blobId: undefined }]);
+  });
+
+  it("merges independently edited sketch fields instead of losing one device's change", () => {
+    const base = {
+      id: "field-merge", name: "Original", intention: "", tags: [], tempo: 70, metre: "4/4" as const,
+      key: "C", mode: "major" as const, chords: [], melody: [], rhythmPattern: "", bassMovement: "",
+      sections: ["A"], notes: "old", ambiguityNotes: "", reflections: [], revisions: [], takes: [],
+      status: "capture" as const, createdAt: "2026-07-13T08:00:00.000Z", updatedAt: "2026-07-13T11:00:00.000Z"
+    };
+    const local = { ...base, name: "Laptop title", fieldUpdatedAt: { name: "2026-07-13T11:00:00.000Z", notes: "2026-07-13T09:00:00.000Z" } };
+    const remote = { ...base, name: "Phone title", notes: "Phone arrangement note", updatedAt: "2026-07-13T12:00:00.000Z", fieldUpdatedAt: { name: "2026-07-13T10:00:00.000Z", notes: "2026-07-13T12:00:00.000Z" } };
+    const merged = mergeCloudSnapshot({ ...DEFAULT_STATE, sketches: [local] }, { sketches: [remote] });
+    expect(merged.sketches[0].name).toBe("Laptop title");
+    expect(merged.sketches[0].notes).toBe("Phone arrangement note");
+  });
+
+  it("merges substantial append-only histories without dropping evidence", () => {
+    const evidence = (prefix: string, count: number) => Array.from({ length: count }, (_, index) => ({
+      id: `${prefix}-${index}`, competencyId: `rhythm:unit-${String(index % 48 + 1).padStart(2, "0")}`,
+      source: "performance" as const, assistance: "none" as const, context: {}, outcome: "successful" as const,
+      occurredAt: `2026-07-${String(index % 28 + 1).padStart(2, "0")}T10:00:00.000Z`, activityId: `${prefix}-activity-${index}`
+    }));
+    const merged = mergeCloudSnapshot({ ...DEFAULT_STATE, evidence: evidence("local", 750) }, { evidence: evidence("remote", 750) });
+    expect(merged.evidence).toHaveLength(1500);
+    expect(new Set(merged.evidence.map((item) => item.id)).size).toBe(1500);
   });
 
   it("uses deletion timestamps so an offline device cannot restore an old sketch", () => {
